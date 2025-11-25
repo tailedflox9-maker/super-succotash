@@ -1,5 +1,3 @@
-// src/components/SettingsModal.tsx
-
 import React, { useState } from 'react';
 import { X, Settings, Key, Download, Upload, Shield, Database, Eye, EyeOff, HelpCircle, Trash2, BookUser } from 'lucide-react';
 import { APISettings, TutorMode } from '../types';
@@ -16,6 +14,8 @@ const apiInfo = {
   google: { name: 'Google AI', url: 'https://aistudio.google.com/app/apikey' },
   zhipu: { name: 'ZhipuAI', url: 'https://open.bigmodel.cn/' },
   mistral: { name: 'Mistral', url: 'https://console.mistral.ai/api-keys' },
+  groq: { name: 'Groq', url: 'https://console.groq.com/keys' },
+  cerebras: { name: 'Cerebras', url: 'https://cloud.cerebras.ai/' }
 };
 
 const tutorModes = [
@@ -187,7 +187,7 @@ export function SettingsModal({ isOpen, onClose, settings, onSaveSettings }: Set
                       <input
                         id={apiKeyId}
                         type={visibleApis[id] ? 'text' : 'password'}
-                        value={localSettings[apiKeyId]}
+                        value={localSettings[apiKeyId] || ''}
                         onChange={(e) => setLocalSettings(prev => ({ ...prev, [apiKeyId]: e.target.value }))}
                         placeholder={`${apiInfo[id].name} key`}
                         className="w-full pl-9 pr-10 py-2 border border-[var(--color-border)] rounded-lg bg-[var(--color-card)] focus:ring-2 focus:ring-gray-500 focus:border-transparent transition-colors"
