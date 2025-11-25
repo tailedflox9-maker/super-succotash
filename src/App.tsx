@@ -42,7 +42,7 @@ function App() {
     const stored = localStorage.getItem('ai-tutor-sidebar-folded');
     return stored ? JSON.parse(stored) : false;
   });
-  
+
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [isQuizLoading, setIsQuizLoading] = useState(false);
   const [isFlowchartLoading, setIsFlowchartLoading] = useState(false);
@@ -51,7 +51,7 @@ function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
   const [studySession, setStudySession] = useState<StudySession | null>(null);
-  
+
   // Notification state
   const [notification, setNotification] = useState<NotificationState>({
     show: false,
@@ -64,12 +64,12 @@ function App() {
     mode: TutorMode;
     show: boolean;
   } | null>(null);
-  
+
   // Use AbortController for proper cancellation
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const { isInstallable, isInstalled, installApp, dismissInstallPrompt } = usePWA();
-  
+
   // Helper function to show notifications
   const showNotification = (message: string, type: 'success' | 'error') => {
     setNotification({ show: true, message, type });
@@ -78,7 +78,7 @@ function App() {
   const hideNotification = () => {
     setNotification(prev => ({ ...prev, show: false }));
   };
-  
+
   // --- EFFECTS ---
   useEffect(() => {
     const initialConversations = storageUtils.getConversations();
@@ -109,6 +109,42 @@ function App() {
     aiService.updateSettings(settings);
   }, [settings]);
 
+  // Shooting star effect - triggers every 60 seconds
+  useEffect(() => {
+    const createShootingStar = () => {
+      const star = document.createElement('div');
+      star.className = 'shooting-star';
+
+      // Random starting position (top 20% of screen, random horizontal)
+      const startX = Math.random() * window.innerWidth;
+      const startY = Math.random() * (window.innerHeight * 0.2);
+
+      star.style.left = `${startX}px`;
+      star.style.top = `${startY}px`;
+
+      document.body.appendChild(star);
+
+      // Trigger animation
+      setTimeout(() => star.classList.add('active'), 10);
+
+      // Remove after animation completes
+      setTimeout(() => {
+        star.remove();
+      }, 1600);
+    };
+
+    // Create shooting star every 60 seconds
+    const interval = setInterval(createShootingStar, 60000);
+
+    // Create first one after 5 seconds
+    const initialTimeout = setTimeout(createShootingStar, 5000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(initialTimeout);
+    };
+  }, []);
+
   // Debounced save to prevent too frequent writes
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -131,8 +167,8 @@ function App() {
     return () => clearTimeout(timeoutId);
   }, [flowcharts]);
 
-  useEffect(() => { 
-    localStorage.setItem('ai-tutor-sidebar-folded', JSON.stringify(sidebarFolded)); 
+  useEffect(() => {
+    localStorage.setItem('ai-tutor-sidebar-folded', JSON.stringify(sidebarFolded));
   }, [sidebarFolded]);
 
   // Close quiz modal and mode suggestion when conversation changes
@@ -143,23 +179,23 @@ function App() {
   }, [currentConversationId]);
 
   // --- MEMOS ---
-  const currentConversation = useMemo(() => 
-    conversations.find(c => c.id === currentConversationId), 
+  const currentConversation = useMemo(() =>
+    conversations.find(c => c.id === currentConversationId),
     [conversations, currentConversationId]
   );
-  
-  const currentNote = useMemo(() => 
-    notes.find(n => n.id === currentNoteId), 
+
+  const currentNote = useMemo(() =>
+    notes.find(n => n.id === currentNoteId),
     [notes, currentNoteId]
   );
 
-  const currentFlowchart = useMemo(() => 
-    flowcharts.find(f => f.id === currentFlowchartId), 
+  const currentFlowchart = useMemo(() =>
+    flowcharts.find(f => f.id === currentFlowchartId),
     [flowcharts, currentFlowchartId]
   );
-  
+
   const hasApiKey = !!(settings.googleApiKey || settings.zhipuApiKey || settings.mistralApiKey);
-  
+
   // --- GENERAL HANDLERS ---
   const handleSelectConversation = (id: string | null) => {
     setActiveView('chat');
@@ -188,10 +224,10 @@ function App() {
   // --- CHAT HANDLERS ---
   const handleNewConversation = () => {
     const newConversation: Conversation = {
-      id: generateId(), 
-      title: 'New Chat', 
-      messages: [], 
-      createdAt: new Date(), 
+      id: generateId(),
+      title: 'New Chat',
+      messages: [],
+      createdAt: new Date(),
       updatedAt: new Date(),
     };
     setConversations(prev => [newConversation, ...prev]);
@@ -204,11 +240,11 @@ function App() {
       return;
     }
 
-    const userMessage: Message = { 
-      id: generateId(), 
-      content, 
-      role: 'user', 
-      timestamp: new Date() 
+    const userMessage: Message = {
+      id: generateId(),
+      content,
+      role: 'user',
+      timestamp: new Date()
     };
 
     let conversationToUpdate: Conversation;
@@ -250,7 +286,7 @@ function App() {
     } else {
       // ✨ Smart mode detection on first message of existing empty conversation
       let titleToUse = existingConversation.title;
-      
+
       if (existingConversation.messages.length === 0) {
         titleToUse = await generateSmartTitle(
           content,
@@ -279,30 +315,30 @@ function App() {
         messages: [...existingConversation.messages, userMessage],
         updatedAt: new Date(),
       };
-      setConversations(prev => prev.map(c => 
+      setConversations(prev => prev.map(c =>
         c.id === conversationToUpdate.id ? conversationToUpdate : c
       ));
     }
 
     setIsChatLoading(true);
-    
+
     // Create new abort controller for this request
     abortControllerRef.current = new AbortController();
 
     try {
-      const assistantMessage: Message = { 
-        id: generateId(), 
-        content: '', 
-        role: 'assistant', 
-        timestamp: new Date(), 
-        model: settings.selectedModel 
+      const assistantMessage: Message = {
+        id: generateId(),
+        content: '',
+        role: 'assistant',
+        timestamp: new Date(),
+        model: settings.selectedModel
       };
       setStreamingMessage(assistantMessage);
 
       let fullResponse = '';
-      const messagesForApi = conversationToUpdate.messages.map(m => ({ 
-        role: m.role, 
-        content: m.content 
+      const messagesForApi = conversationToUpdate.messages.map(m => ({
+        role: m.role,
+        content: m.content
       }));
 
       for await (const chunk of aiService.generateStreamingResponse(messagesForApi)) {
@@ -315,7 +351,7 @@ function App() {
       }
 
       const finalAssistantMessage: Message = { ...assistantMessage, content: fullResponse };
-      
+
       setConversations(prev => prev.map(conv =>
         conv.id === conversationToUpdate.id
           ? { ...conv, messages: [...conv.messages, finalAssistantMessage], updatedAt: new Date() }
@@ -330,12 +366,12 @@ function App() {
         console.error('Error sending message:', error);
         const errorMsg = error instanceof Error ? error.message : 'Unknown error';
         showNotification(`Failed to send message: ${errorMsg}`, 'error');
-        
-        const errorMessage: Message = { 
-          id: generateId(), 
-          content: `Sorry, an error occurred. Error: ${errorMsg}`, 
-          role: 'assistant', 
-          timestamp: new Date() 
+
+        const errorMessage: Message = {
+          id: generateId(),
+          content: `Sorry, an error occurred. Error: ${errorMsg}`,
+          role: 'assistant',
+          timestamp: new Date()
         };
         setConversations(prev => prev.map(conv =>
           conv.id === conversationToUpdate.id
@@ -391,12 +427,12 @@ function App() {
     abortControllerRef.current = new AbortController();
 
     try {
-      const assistantMessage: Message = { 
-        id: generateId(), 
-        content: '', 
-        role: 'assistant', 
-        timestamp: new Date(), 
-        model: settings.selectedModel 
+      const assistantMessage: Message = {
+        id: generateId(),
+        content: '',
+        role: 'assistant',
+        timestamp: new Date(),
+        model: settings.selectedModel
       };
       setStreamingMessage(assistantMessage);
 
@@ -408,10 +444,10 @@ function App() {
       }
 
       const finalAssistantMessage: Message = { ...assistantMessage, content: fullResponse };
-      
-      setConversations(prev => prev.map(conv => 
-        conv.id === currentConversationId 
-          ? { ...conv, messages: [...history, finalAssistantMessage], updatedAt: new Date() } 
+
+      setConversations(prev => prev.map(conv =>
+        conv.id === currentConversationId
+          ? { ...conv, messages: [...history, finalAssistantMessage], updatedAt: new Date() }
           : conv
       ));
     } catch (error) {
@@ -419,16 +455,16 @@ function App() {
         console.error('Error regenerating response:', error);
         const errorMsg = error instanceof Error ? error.message : 'Unknown error';
         showNotification(`Failed to regenerate: ${errorMsg}`, 'error');
-        
-        const errorMessage: Message = { 
-          id: generateId(), 
-          content: `Sorry, an error occurred while regenerating. Error: ${errorMsg}`, 
-          role: 'assistant', 
-          timestamp: new Date() 
+
+        const errorMessage: Message = {
+          id: generateId(),
+          content: `Sorry, an error occurred while regenerating. Error: ${errorMsg}`,
+          role: 'assistant',
+          timestamp: new Date()
         };
-        setConversations(prev => prev.map(conv => 
-          conv.id === currentConversationId 
-            ? { ...conv, messages: [...history, errorMessage] } 
+        setConversations(prev => prev.map(conv =>
+          conv.id === currentConversationId
+            ? { ...conv, messages: [...history, errorMessage] }
             : conv
         ));
       }
@@ -438,7 +474,7 @@ function App() {
       abortControllerRef.current = null;
     }
   };
-  
+
   const sortedConversations = useMemo(() => [...conversations].sort((a, b) => {
     if (a.isPinned && !b.isPinned) return -1;
     if (!a.isPinned && b.isPinned) return 1;
@@ -454,16 +490,16 @@ function App() {
       if (!newId) setActiveView('chat');
     }
   };
-  
+
   // --- NOTE & QUIZ HANDLERS ---
   const handleSaveAsNote = (content: string) => {
     if (!currentConversationId) return;
     const newNote: Note = {
-      id: generateId(), 
+      id: generateId(),
       title: content.slice(0, 50) + (content.length > 50 ? '...' : ''),
-      content, 
-      createdAt: new Date(), 
-      updatedAt: new Date(), 
+      content,
+      createdAt: new Date(),
+      updatedAt: new Date(),
       sourceConversationId: currentConversationId,
     };
     setNotes(prev => [newNote, ...prev]);
@@ -472,7 +508,7 @@ function App() {
 
   const handleDeleteNote = (id: string) => {
     setNotes(prev => prev.filter(n => n.id !== id));
-    if(currentNoteId === id) {
+    if (currentNoteId === id) {
       setCurrentNoteId(null);
       setActiveView('chat');
     }
@@ -571,7 +607,7 @@ function App() {
       const jsonStr = JSON.stringify(exportData, null, 2);
       const blob = new Blob([jsonStr], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
-      
+
       const a = document.createElement('a');
       a.href = url;
       const fileName = `${flowchart.title.replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.json`;
@@ -580,7 +616,7 @@ function App() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
+
       showNotification(`Flowchart exported as ${fileName}`, 'success');
     } catch (error) {
       console.error('Export error:', error);
@@ -595,13 +631,13 @@ function App() {
       setActiveView('chat');
     }
   };
-  
+
   // --- MODE SUGGESTION HANDLERS ---
   const handleAcceptModeSuggestion = async () => {
     if (!modeSuggestion) return;
-    
+
     const newMode = modeSuggestion.mode;
-    
+
     // Get friendly mode name
     const modeNames: Record<TutorMode, string> = {
       standard: 'Standard Tutor',
@@ -609,24 +645,24 @@ function App() {
       mentor: 'Friendly Mentor',
       creative: 'Creative Guide'
     };
-    
+
     // Switch mode first
     handleTutorModeChange(newMode);
     setModeSuggestion(null);
-    
+
     // Show notification
     showNotification(`Switched to ${modeNames[newMode]} mode! Regenerating response...`, 'success');
-    
+
     // Auto-regenerate the last assistant message if it exists
     const conversation = conversations.find(c => c.id === currentConversationId);
     if (conversation && conversation.messages.length > 0) {
       // Find the last assistant message
       const lastAssistantMessage = [...conversation.messages].reverse().find(m => m.role === 'assistant');
-      
+
       if (lastAssistantMessage) {
         // Wait a bit for the mode to update
         await new Promise(resolve => setTimeout(resolve, 100));
-        
+
         // Trigger regeneration
         handleRegenerateResponse(lastAssistantMessage.id);
       }
@@ -636,7 +672,7 @@ function App() {
   const handleDismissModeSuggestion = () => {
     setModeSuggestion(null);
   };
-  
+
   // --- OTHER HANDLERS ---
   const handleModelChange = (model: 'google' | 'zhipu' | 'mistral-small' | 'mistral-codestral') => {
     const newSettings = { ...settings, selectedModel: model };
@@ -651,13 +687,13 @@ function App() {
   };
 
   const handleRenameConversation = (id: string, newTitle: string) => {
-    setConversations(prev => prev.map(c => 
+    setConversations(prev => prev.map(c =>
       (c.id === id ? { ...c, title: newTitle, updatedAt: new Date() } : c)
     ));
   };
 
   const handleTogglePinConversation = (id: string) => {
-    setConversations(prev => prev.map(c => 
+    setConversations(prev => prev.map(c =>
       (c.id === id ? { ...c, isPinned: !c.isPinned, updatedAt: new Date() } : c)
     ));
   };
@@ -685,7 +721,7 @@ function App() {
         const lastAssistantMessage = [...conversation.messages].reverse().find(
           (msg) => msg.role === 'assistant'
         );
-        
+
         if (lastAssistantMessage) {
           // Use a timeout to ensure settings state propagates before API call
           setTimeout(() => {
@@ -696,7 +732,7 @@ function App() {
     }
   };
 
-  const handleInstallApp = async () => { 
+  const handleInstallApp = async () => {
     if (await installApp()) {
       console.log('App installed');
       showNotification('App installed successfully!', 'success');
@@ -710,15 +746,15 @@ function App() {
     }
   };
 
-  const sortedNotes = useMemo(() => 
-    [...notes].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()), 
+  const sortedNotes = useMemo(() =>
+    [...notes].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()),
     [notes]
   );
 
-  const sortedFlowcharts = useMemo(() => 
-    [...flowcharts].sort((a, b) => 
+  const sortedFlowcharts = useMemo(() =>
+    [...flowcharts].sort((a, b) =>
       new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-    ), 
+    ),
     [flowcharts]
   );
 
@@ -732,7 +768,7 @@ function App() {
           onClose={hideNotification}
         />
       )}
-      
+
       {sidebarOpen && window.innerWidth < 1024 && (
         <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />
       )}
@@ -763,9 +799,9 @@ function App() {
       />
       <div className="main-content">
         {!sidebarOpen && (
-          <button 
-            onClick={() => setSidebarOpen(true)} 
-            className="mobile-menu-button interactive-button p-2.5 bg-[var(--color-card)] rounded-lg shadow-md hover:bg-[var(--color-border)] transition-colors lg:hidden" 
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="mobile-menu-button interactive-button p-2.5 bg-[var(--color-card)] rounded-lg shadow-md hover:bg-[var(--color-border)] transition-colors lg:hidden"
             title="Open sidebar"
             aria-label="Open sidebar"
           >
@@ -784,7 +820,7 @@ function App() {
                 />
               </div>
             )}
-            
+
             <ChatArea
               conversation={currentConversation}
               onSendMessage={handleSendMessage}
@@ -805,26 +841,26 @@ function App() {
         ) : activeView === 'note' ? (
           <NoteView note={currentNote} />
         ) : (
-          <FlowchartView 
+          <FlowchartView
             flowchart={currentFlowchart}
             onSave={handleSaveFlowchart}
             onExport={handleExportFlowchart}
           />
         )}
       </div>
-      <SettingsModal 
-        isOpen={settingsOpen} 
-        onClose={() => setSettingsOpen(false)} 
-        settings={settings} 
+      <SettingsModal
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        settings={settings}
         onSaveSettings={handleSaveSettings}
       />
-      <QuizModal 
-        isOpen={isQuizModalOpen} 
-        onClose={() => setIsQuizModalOpen(false)} 
-        session={studySession} 
+      <QuizModal
+        isOpen={isQuizModalOpen}
+        onClose={() => setIsQuizModalOpen(false)}
+        session={studySession}
       />
-      {isInstallable && !isInstalled && ( 
-        <InstallPrompt onInstall={handleInstallApp} onDismiss={dismissInstallPrompt} /> 
+      {isInstallable && !isInstalled && (
+        <InstallPrompt onInstall={handleInstallApp} onDismiss={dismissInstallPrompt} />
       )}
     </div>
   );
