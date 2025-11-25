@@ -39,39 +39,51 @@
   }
 
   /* --- ANIMATED STARFIELD BACKGROUND --- */
-  /* Starfield background with bright glowing stars */
-  html {
-    background:
-      radial-gradient(circle, white 0%, white 40%, transparent 70%),
-      radial-gradient(circle at 20% 30%, white 0%, transparent 50%) 0 0/3px 3px,
-      radial-gradient(circle at 60% 70%, white 0%, transparent 50%) 0 0/3px 3px,
-      radial-gradient(circle at 50% 50%, white 0%, transparent 50%) 0 0/2px 2px,
-      radial-gradient(circle at 80% 10%, white 0%, transparent 50%) 0 0/2px 2px,
-      radial-gradient(circle at 90% 60%, white 0%, transparent 50%) 0 0/3px 3px,
-      radial-gradient(circle at 33% 80%, white 0%, transparent 50%) 0 0/2px 2px,
-      radial-gradient(circle at 15% 90%, white 0%, transparent 50%) 0 0/3px 3px,
-      radial-gradient(circle at 70% 40%, white 0%, transparent 50%) 0 0/2px 2px,
-      radial-gradient(circle at 25% 15%, white 0%, transparent 50%) 0 0/2px 2px,
-      radial-gradient(circle at 45% 95%, white 0%, transparent 50%) 0 0/3px 3px,
-      radial-gradient(circle at 85% 85%, white 0%, transparent 50%) 0 0/2px 2px,
-      radial-gradient(circle at 10% 50%, white 0%, transparent 50%) 0 0/3px 3px,
-      radial-gradient(circle at 95% 25%, white 0%, transparent 50%) 0 0/2px 2px,
-      radial-gradient(circle at 40% 60%, white 0%, transparent 50%) 0 0/2px 2px,
-      radial-gradient(circle at 65% 20%, white 0%, transparent 50%) 0 0/3px 3px,
-      /* Second layer - smaller bright stars */
-      radial-gradient(circle at 22% 45%, white 0%, transparent 50%) 0 0/2px 2px,
-      radial-gradient(circle at 55% 85%, white 0%, transparent 50%) 0 0/2px 2px,
-      radial-gradient(circle at 75% 55%, white 0%, transparent 50%) 0 0/2px 2px,
-      radial-gradient(circle at 35% 25%, white 0%, transparent 50%) 0 0/2px 2px,
-      radial-gradient(circle at 88% 75%, white 0%, transparent 50%) 0 0/2px 2px,
-      radial-gradient(circle at 12% 65%, white 0%, transparent 50%) 0 0/2px 2px,
-      radial-gradient(circle at 48% 35%, white 0%, transparent 50%) 0 0/2px 2px,
-      radial-gradient(circle at 92% 45%, white 0%, transparent 50%) 0 0/2px 2px,
-      radial-gradient(circle at 30% 75%, white 0%, transparent 50%) 0 0/2px 2px,
-      radial-gradient(circle at 68% 15%, white 0%, transparent 50%) 0 0/2px 2px,
-      #0a0a0a;
-    background-size: 100% 100%;
-    background-attachment: fixed;
+  /* Bright starfield using pseudo-elements */
+  html::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    pointer-events: none;
+    background: #0a0a0a;
+    box-shadow:
+      /* Large bright stars */
+      20vw 30vh 2px 1px white,
+      60vw 70vh 2px 1px white,
+      90vw 60vh 2px 1px white,
+      15vw 90vh 2px 1px white,
+      45vw 95vh 2px 1px white,
+      10vw 50vh 2px 1px white,
+      65vw 20vh 2px 1px white,
+      /* Medium stars */
+      50vw 50vh 1px 1px white,
+      80vw 10vh 1px 1px white,
+      33vw 80vh 1px 1px white,
+      70vw 40vh 1px 1px white,
+      25vw 15vh 1px 1px white,
+      85vw 85vh 1px 1px white,
+      95vw 25vh 1px 1px white,
+      40vw 60vh 1px 1px white,
+      /* Small stars */
+      22vw 45vh 1px 0px rgba(255, 255, 255, 0.8),
+      55vw 85vh 1px 0px rgba(255, 255, 255, 0.8),
+      75vw 55vh 1px 0px rgba(255, 255, 255, 0.8),
+      35vw 25vh 1px 0px rgba(255, 255, 255, 0.8),
+      88vw 75vh 1px 0px rgba(255, 255, 255, 0.8),
+      12vw 65vh 1px 0px rgba(255, 255, 255, 0.8),
+      48vw 35vh 1px 0px rgba(255, 255, 255, 0.8),
+      92vw 45vh 1px 0px rgba(255, 255, 255, 0.8),
+      30vw 75vh 1px 0px rgba(255, 255, 255, 0.8),
+      68vw 15vh 1px 0px rgba(255, 255, 255, 0.8),
+      42vw 82vh 1px 0px rgba(255, 255, 255, 0.8),
+      78vw 38vh 1px 0px rgba(255, 255, 255, 0.8),
+      18vw 58vh 1px 0px rgba(255, 255, 255, 0.8),
+      62vw 28vh 1px 0px rgba(255, 255, 255, 0.8),
+      5vw 95vh 1px 0px rgba(255, 255, 255, 0.8);
   }
 
   * {
