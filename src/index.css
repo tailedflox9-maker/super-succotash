@@ -58,18 +58,19 @@
       radial-gradient(1px 1px at 40% 60%, white, transparent),
       radial-gradient(2px 2px at 65% 20%, white, transparent),
       /* Second layer - smaller stars */
-      radial-gradient(1px 1px at 22% 45%, rgba(255, 255, 255, 0.6), transparent),
-      radial-gradient(1px 1px at 55% 85%, rgba(255, 255, 255, 0.6), transparent),
-      radial-gradient(1px 1px at 75% 55%, rgba(255, 255, 255, 0.6), transparent),
-      radial-gradient(1px 1px at 35% 25%, rgba(255, 255, 255, 0.6), transparent),
-      radial-gradient(1px 1px at 88% 75%, rgba(255, 255, 255, 0.6), transparent),
-      radial-gradient(1px 1px at 12% 65%, rgba(255, 255, 255, 0.6), transparent),
-      radial-gradient(1px 1px at 48% 35%, rgba(255, 255, 255, 0.6), transparent),
-      radial-gradient(1px 1px at 92% 45%, rgba(255, 255, 255, 0.6), transparent),
-      radial-gradient(1px 1px at 30% 75%, rgba(255, 255, 255, 0.6), transparent),
-      radial-gradient(1px 1px at 68% 15%, rgba(255, 255, 255, 0.6), transparent),
+      radial-gradient(1px 1px at 22% 45%, white, transparent),
+      radial-gradient(1px 1px at 55% 85%, white, transparent),
+      radial-gradient(1px 1px at 75% 55%, white, transparent),
+      radial-gradient(1px 1px at 35% 25%, white, transparent),
+      radial-gradient(1px 1px at 88% 75%, white, transparent),
+      radial-gradient(1px 1px at 12% 65%, white, transparent),
+      radial-gradient(1px 1px at 48% 35%, white, transparent),
+      radial-gradient(1px 1px at 92% 45%, white, transparent),
+      radial-gradient(1px 1px at 30% 75%, white, transparent),
+      radial-gradient(1px 1px at 68% 15%, white, transparent),
       #0a0a0a;
     background-size: 200% 200%;
+    background-attachment: fixed;
   }
 
   * {
@@ -841,16 +842,16 @@
   /* Chat input and message bubbles with enhanced transparency */
   .chat-input-form,
   .message-bubble {
-    background: rgba(31, 31, 31, 0.65) !important;
+    background: rgba(31, 31, 31, 0.5) !important;
     backdrop-filter: blur(15px) saturate(180%);
     -webkit-backdrop-filter: blur(15px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   }
 
   /* Message bubble hover effect */
   .message-bubble:hover {
-    background: rgba(31, 31, 31, 0.8) !important;
-    border-color: rgba(255, 255, 255, 0.15) !important;
+    background: rgba(31, 31, 31, 0.7) !important;
+    border-color: rgba(255, 255, 255, 0.18) !important;
   }
 }
