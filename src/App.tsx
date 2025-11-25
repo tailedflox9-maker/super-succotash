@@ -897,6 +897,18 @@ function App() {
             onClose={handleCloseJourney}
           />
         )}
+
+        {/* TEMP: Test Journey Button */}
+        {activeView === 'chat' && (
+          <button
+            onClick={() => handleStartJourney("Black Holes")}
+            className="fixed bottom-24 right-6 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold px-6 py-3 rounded-full shadow-lg transform hover:scale-105 transition-all z-50 flex items-center gap-2"
+            style={{ animation: 'popIn 0.5s ease-out' }}
+          >
+            <span>🚀</span>
+            Test Journey
+          </button>
+        )}
       </div>
       <SettingsModal
         isOpen={settingsOpen}
