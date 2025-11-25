@@ -5,7 +5,6 @@ import {
   Zap, Cpu, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { Conversation, Note, Flowchart, AIModel } from '../types';
-import { ThemeToggle } from './ThemeToggle';
 
 interface SidebarProps {
   conversations: Conversation[];
@@ -183,7 +182,6 @@ export function Sidebar({
             </a>
           )}
           <div className="flex items-center gap-1">
-            {!isFolded && <ThemeToggle />}
             <button
               onClick={onOpenSettings}
               className="p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-card)] rounded-lg transition-colors"
@@ -243,8 +241,8 @@ export function Sidebar({
                     key={model.id}
                     onClick={() => onModelChange(model.id as AIModel)}
                     className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200 border transform hover:scale-105 active:scale-100 ${settings.selectedModel === model.id
-                        ? 'bg-[var(--color-card)] border-[var(--color-border)] text-white scale-105'
-                        : 'bg-transparent border-transparent hover:bg-[var(--color-card)] text-[var(--color-text-secondary)] hover:text-white'
+                      ? 'bg-[var(--color-card)] border-[var(--color-border)] text-white scale-105'
+                      : 'bg-transparent border-transparent hover:bg-[var(--color-card)] text-[var(--color-text-secondary)] hover:text-white'
                       }`}
                     title={model.name}
                   >
@@ -299,8 +297,8 @@ export function Sidebar({
                   key={conversation.id}
                   onClick={() => onSelectConversation(conversation.id)}
                   className={`group relative flex items-center gap-2 ${isFolded ? 'justify-center p-2.5' : 'p-2'} rounded-lg cursor-pointer transition-colors ${activeView === 'chat' && currentConversationId === conversation.id
-                      ? 'bg-[var(--color-accent-bg)] text-[var(--color-accent-text)]'
-                      : 'hover:bg-[var(--color-card)] text-[var(--color-text-primary)]'
+                    ? 'bg-[var(--color-accent-bg)] text-[var(--color-accent-text)]'
+                    : 'hover:bg-[var(--color-card)] text-[var(--color-text-primary)]'
                     }`}
                   title={conversation.title}
                 >
@@ -392,8 +390,8 @@ export function Sidebar({
                   key={note.id}
                   onClick={() => onSelectNote(note.id)}
                   className={`group p-2.5 rounded-lg cursor-pointer transition-colors ${activeView === 'note' && currentNoteId === note.id
-                      ? 'bg-[var(--color-accent-bg)] text-[var(--color-accent-text)]'
-                      : 'hover:bg-[var(--color-card)] text-[var(--color-text-primary)]'
+                    ? 'bg-[var(--color-accent-bg)] text-[var(--color-accent-text)]'
+                    : 'hover:bg-[var(--color-card)] text-[var(--color-text-primary)]'
                     }`}
                 >
                   <div className="flex items-start justify-between gap-2">
@@ -440,8 +438,8 @@ export function Sidebar({
                   key={flowchart.id}
                   onClick={() => onSelectFlowchart(flowchart.id)}
                   className={`group p-2.5 rounded-lg cursor-pointer transition-colors ${activeView === 'flowchart' && currentFlowchartId === flowchart.id
-                      ? 'bg-[var(--color-accent-bg)] text-[var(--color-accent-text)]'
-                      : 'hover:bg-[var(--color-card)] text-[var(--color-text-primary)]'
+                    ? 'bg-[var(--color-accent-bg)] text-[var(--color-accent-text)]'
+                    : 'hover:bg-[var(--color-card)] text-[var(--color-text-primary)]'
                     }`}
                 >
                   <div className="flex items-start justify-between gap-2">
@@ -504,8 +502,8 @@ export function Sidebar({
           <button
             onClick={() => handleViewChange('chats')}
             className={`flex flex-col items-center gap-1 p-2 rounded-lg w-full transition-colors ${view === 'chats'
-                ? 'text-[var(--color-text-primary)] bg-[var(--color-card)]'
-                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-card)]'
+              ? 'text-[var(--color-text-primary)] bg-[var(--color-card)]'
+              : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-card)]'
               }`}
             title="Chats"
           >
@@ -515,8 +513,8 @@ export function Sidebar({
           <button
             onClick={() => handleViewChange('notes')}
             className={`flex flex-col items-center gap-1 p-2 rounded-lg w-full transition-colors ${view === 'notes'
-                ? 'text-[var(--color-text-primary)] bg-[var(--color-card)]'
-                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-card)]'
+              ? 'text-[var(--color-text-primary)] bg-[var(--color-card)]'
+              : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-card)]'
               }`}
             title="Notes"
           >
@@ -526,8 +524,8 @@ export function Sidebar({
           <button
             onClick={() => handleViewChange('flowcharts')}
             className={`flex flex-col items-center gap-1 p-2 rounded-lg w-full transition-colors ${view === 'flowcharts'
-                ? 'text-[var(--color-text-primary)] bg-[var(--color-card)]'
-                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-card)]'
+              ? 'text-[var(--color-text-primary)] bg-[var(--color-card)]'
+              : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-card)]'
               }`}
             title="Flowcharts"
           >
