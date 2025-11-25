@@ -39,19 +39,9 @@
   }
 
   /* --- ANIMATED STARFIELD BACKGROUND --- */
-  /* Layer 1: Larger, brighter stars */
-  html::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    pointer-events: none;
-    background-color: #050505;
-
-    background-image:
+  /* Starfield background with two layers */
+  html {
+    background:
       radial-gradient(2px 2px at 20% 30%, white, transparent),
       radial-gradient(2px 2px at 60% 70%, white, transparent),
       radial-gradient(1px 1px at 50% 50%, white, transparent),
@@ -59,43 +49,27 @@
       radial-gradient(2px 2px at 90% 60%, white, transparent),
       radial-gradient(1px 1px at 33% 80%, white, transparent),
       radial-gradient(2px 2px at 15% 90%, white, transparent),
+      radial-gradient(1px 1px at 70% 40%, white, transparent),
       radial-gradient(1px 1px at 25% 15%, white, transparent),
-      radial-gradient(2px 2px at 75% 40%, white, transparent),
-      radial-gradient(1px 1px at 45% 65%, white, transparent);
+      radial-gradient(2px 2px at 45% 95%, white, transparent),
+      radial-gradient(1px 1px at 85% 85%, white, transparent),
+      radial-gradient(2px 2px at 10% 50%, white, transparent),
+      radial-gradient(1px 1px at 95% 25%, white, transparent),
+      radial-gradient(1px 1px at 40% 60%, white, transparent),
+      radial-gradient(2px 2px at 65% 20%, white, transparent),
+      /* Second layer - smaller stars */
+      radial-gradient(1px 1px at 22% 45%, rgba(255, 255, 255, 0.6), transparent),
+      radial-gradient(1px 1px at 55% 85%, rgba(255, 255, 255, 0.6), transparent),
+      radial-gradient(1px 1px at 75% 55%, rgba(255, 255, 255, 0.6), transparent),
+      radial-gradient(1px 1px at 35% 25%, rgba(255, 255, 255, 0.6), transparent),
+      radial-gradient(1px 1px at 88% 75%, rgba(255, 255, 255, 0.6), transparent),
+      radial-gradient(1px 1px at 12% 65%, rgba(255, 255, 255, 0.6), transparent),
+      radial-gradient(1px 1px at 48% 35%, rgba(255, 255, 255, 0.6), transparent),
+      radial-gradient(1px 1px at 92% 45%, rgba(255, 255, 255, 0.6), transparent),
+      radial-gradient(1px 1px at 30% 75%, rgba(255, 255, 255, 0.6), transparent),
+      radial-gradient(1px 1px at 68% 15%, rgba(255, 255, 255, 0.6), transparent),
+      #0a0a0a;
     background-size: 200% 200%;
-    background-position: 0% 0%, 40% 60%, 50% 50%, 80% 10%, 90% 60%, 33% 80%, 15% 90%, 25% 15%, 75% 40%, 45% 65%;
-    background-repeat: repeat;
-    opacity: 0.9;
-  }
-
-  /* Layer 2: Smaller, dimmer stars */
-  html::after {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    pointer-events: none;
-
-    background-image:
-      radial-gradient(1px 1px at 10% 20%, white, transparent),
-      radial-gradient(1px 1px at 40% 40%, white, transparent),
-      radial-gradient(1px 1px at 70% 30%, white, transparent),
-      radial-gradient(1px 1px at 25% 60%, white, transparent),
-      radial-gradient(1px 1px at 85% 80%, white, transparent),
-      radial-gradient(1px 1px at 45% 90%, white, transparent),
-      radial-gradient(1px 1px at 65% 15%, white, transparent),
-      radial-gradient(1px 1px at 5% 75%, white, transparent),
-      radial-gradient(1px 1px at 55% 25%, white, transparent),
-      radial-gradient(1px 1px at 35% 55%, white, transparent),
-      radial-gradient(1px 1px at 95% 35%, white, transparent),
-      radial-gradient(1px 1px at 15% 45%, white, transparent);
-    background-size: 250% 250%;
-    background-position: 10% 20%, 40% 40%, 70% 30%, 25% 60%, 85% 80%, 45% 90%, 65% 15%, 5% 75%, 55% 25%, 35% 55%, 95% 35%, 15% 45%;
-    background-repeat: repeat;
-    opacity: 0.5;
   }
 
   * {
@@ -867,7 +841,7 @@
   /* Chat input and message bubbles with enhanced transparency */
   .chat-input-form,
   .message-bubble {
-    background: rgba(31, 31, 31, 0.75) !important;
+    background: rgba(31, 31, 31, 0.65) !important;
     backdrop-filter: blur(15px) saturate(180%);
     -webkit-backdrop-filter: blur(15px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -876,7 +850,7 @@
 
   /* Message bubble hover effect */
   .message-bubble:hover {
-    background: rgba(31, 31, 31, 0.85) !important;
+    background: rgba(31, 31, 31, 0.8) !important;
     border-color: rgba(255, 255, 255, 0.15) !important;
   }
 }
