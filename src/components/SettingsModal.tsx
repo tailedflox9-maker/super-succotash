@@ -120,7 +120,7 @@ export function SettingsModal({ isOpen, onClose, settings, onSaveSettings }: Set
         className="fixed inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="settings-modal-content relative w-full max-w-lg bg-[var(--color-sidebar)] border border-[var(--color-border)] rounded-lg shadow-2xl flex flex-col animate-fade-in-up">
+      <div className="relative w-full max-w-lg bg-[var(--color-sidebar)] border border-[var(--color-border)] rounded-lg shadow-2xl flex flex-col animate-fade-in-up">
         {/* Header */}
         <div className="p-6 flex items-center justify-between border-b border-[var(--color-border)]">
           <div className="flex items-center gap-3">
