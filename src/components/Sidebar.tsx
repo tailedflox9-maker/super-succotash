@@ -1,9 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
   Plus, MessageSquare, Settings, Trash2, X, ChevronLeft, ChevronRight,
-  Sparkles, Brain, Cloud, Terminal, Search, Pin, Edit, Book, GitBranch
+  Sparkles, Brain, Cloud, Terminal, Search, Pin, Edit, Book, GitBranch,
+  Cpu, Zap, Cpu as Chip
 } from 'lucide-react';
-import { Conversation, Note, Flowchart } from '../types';
+import { Conversation, Note, Flowchart, AIModel } from '../types';
 
 interface SidebarProps {
   conversations: Conversation[];
@@ -23,8 +24,8 @@ interface SidebarProps {
   onDeleteNote: (id: string) => void;
   onDeleteFlowchart: (id: string) => void;
   onOpenSettings: () => void;
-  settings: { selectedModel: string };
-  onModelChange: (model: any) => void;
+  settings: { selectedModel: AIModel };
+  onModelChange: (model: AIModel) => void;
   onCloseSidebar: () => void;
   isSidebarOpen: boolean;
   isFolded?: boolean;
@@ -60,6 +61,7 @@ export function Sidebar({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
   const [view, setView] = useState<'chats' | 'notes' | 'flowcharts'>('chats');
+  const [modelGroup, setModelGroup] = useState<'google' | 'mistral' | 'others'>('google');
 
   // Sync view with activeView prop
   useEffect(() => {
@@ -73,10 +75,28 @@ export function Sidebar({
   }, [activeView]);
 
   const models = [
-    { id: 'google', icon: Sparkles, name: 'Gemma' },
-    { id: 'zhipu', icon: Brain, name: 'ZhipuAI' },
-    { id: 'mistral-small', icon: Cloud, name: 'Mistral' },
-    { id: 'mistral-codestral', icon: Terminal, name: 'Codestral' },
+    // Google
+    { id: 'gemini-2.5-pro', icon: Sparkles, name: 'Gemini 2.5 Pro', provider: 'google' },
+    { id: 'gemini-2.5-flash', icon: Sparkles, name: 'Gemini 2.5 Flash', provider: 'google' },
+    { id: 'gemma-3-27b-it', icon: Sparkles, name: 'Gemma 3 27B', provider: 'google' },
+    
+    // Mistral
+    { id: 'mistral-large-latest', icon: Cloud, name: 'Mistral Large', provider: 'mistral' },
+    { id: 'mistral-medium-latest', icon: Cloud, name: 'Mistral Medium', provider: 'mistral' },
+    { id: 'mistral-small-latest', icon: Cloud, name: 'Mistral Small', provider: 'mistral' },
+    { id: 'codestral-latest', icon: Terminal, name: 'Codestral', provider: 'mistral' },
+    
+    // Groq
+    { id: 'llama-3.3-70b-versatile', icon: Zap, name: 'Llama 3.3 70B', provider: 'others' },
+    { id: 'openai/gpt-oss-20b', icon: Zap, name: 'GPT-OSS 20B', provider: 'others' },
+    
+    // Cerebras
+    { id: 'gpt-oss-120b', icon: Chip, name: 'GPT-OSS 120B', provider: 'others' },
+    { id: 'qwen-3-235b-a22b-instruct-2507', icon: Chip, name: 'Qwen 3 235B', provider: 'others' },
+    { id: 'zai-glm-4.6', icon: Chip, name: 'ZAI GLM 4.6', provider: 'others' },
+    
+    // Zhipu
+    { id: 'glm-4.5-flash', icon: Brain, name: 'Zhipu GLM 4.5', provider: 'others' },
   ];
 
   const sortedConversations = useMemo(() => {
@@ -196,45 +216,57 @@ export function Sidebar({
         </button>
       </div>
 
-      {/* Model Selector - Only show when in chat view */}
+      {/* Model Selector */}
       {view === 'chats' && (
         <div className="p-2 border-b border-[var(--color-border)]">
-          {isFolded ? (
-            <div className="space-y-2">
-              {models.map(model => (
-                <button
-                  key={model.id}
-                  onClick={() => onModelChange(model.id as any)}
-                  className={`w-full flex justify-center items-center p-2 rounded-lg transition-all duration-200 border ${
-                    settings.selectedModel === model.id
-                      ? 'bg-[var(--color-card)] border-[var(--color-border)] text-white'
-                      : 'bg-transparent border-transparent hover:bg-[var(--color-card)] text-[var(--color-text-secondary)] hover:text-white'
-                  }`}
-                  title={model.name}
+          {!isFolded && (
+             <div className="flex gap-1 mb-2 bg-[var(--color-card)] p-1 rounded-lg">
+                <button 
+                  onClick={() => setModelGroup('google')} 
+                  className={`flex-1 text-[10px] font-bold py-1 rounded ${modelGroup === 'google' ? 'bg-[var(--color-bg)] text-white shadow-sm' : 'text-gray-400 hover:text-white'}`}
                 >
-                  <model.icon className="w-5 h-5" />
+                  Google
                 </button>
-              ))}
-            </div>
+                <button 
+                  onClick={() => setModelGroup('mistral')} 
+                  className={`flex-1 text-[10px] font-bold py-1 rounded ${modelGroup === 'mistral' ? 'bg-[var(--color-bg)] text-white shadow-sm' : 'text-gray-400 hover:text-white'}`}
+                >
+                  Mistral
+                </button>
+                <button 
+                  onClick={() => setModelGroup('others')} 
+                  className={`flex-1 text-[10px] font-bold py-1 rounded ${modelGroup === 'others' ? 'bg-[var(--color-bg)] text-white shadow-sm' : 'text-gray-400 hover:text-white'}`}
+                >
+                  Fast/Other
+                </button>
+             </div>
+          )}
+
+          {isFolded ? (
+             <div className="flex justify-center">
+                <button
+                   className="p-2 bg-[var(--color-card)] rounded-lg text-[var(--color-text-primary)]"
+                   title={models.find(m => m.id === settings.selectedModel)?.name}
+                >
+                   {React.createElement(models.find(m => m.id === settings.selectedModel)?.icon || Sparkles, { className: "w-5 h-5" })}
+                </button>
+             </div>
           ) : (
-            <div className="space-y-2">
-              <p className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider px-1">
-                AI Model
-              </p>
-              <div className="grid grid-cols-2 gap-2">
-                {models.map(model => (
+            <div className="space-y-2 max-h-32 overflow-y-auto pr-1 scrollbar-thin">
+              <div className="grid grid-cols-1 gap-1">
+                {models.filter(m => m.provider === modelGroup).map(model => (
                   <button
                     key={model.id}
-                    onClick={() => onModelChange(model.id as any)}
-                    className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200 border transform hover:scale-105 active:scale-100 ${
+                    onClick={() => onModelChange(model.id as AIModel)}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200 border text-left ${
                       settings.selectedModel === model.id
-                        ? 'bg-[var(--color-card)] border-[var(--color-border)] text-white scale-105'
+                        ? 'bg-[var(--color-card)] border-[var(--color-border)] text-white'
                         : 'bg-transparent border-transparent hover:bg-[var(--color-card)] text-[var(--color-text-secondary)] hover:text-white'
                     }`}
                     title={model.name}
                   >
-                    <model.icon className="w-4 h-4" />
-                    <span className="text-xs font-semibold">{model.name}</span>
+                    <model.icon className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span className="text-xs font-medium truncate">{model.name}</span>
                   </button>
                 ))}
               </div>
