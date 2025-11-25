@@ -5,6 +5,7 @@ import {
   Zap, Cpu, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { Conversation, Note, Flowchart, AIModel } from '../types';
+import { ThemeToggle } from './ThemeToggle';
 
 interface SidebarProps {
   conversations: Conversation[];
@@ -61,7 +62,7 @@ export function Sidebar({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
   const [view, setView] = useState<'chats' | 'notes' | 'flowcharts'>('chats');
-  
+
   // State to toggle the extra models
   const [showAllModels, setShowAllModels] = useState(false);
 
@@ -107,7 +108,7 @@ export function Sidebar({
   }, [conversations]);
 
   const filteredConversations = useMemo(() => {
-    return sortedConversations.filter(c => 
+    return sortedConversations.filter(c =>
       c.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [sortedConversations, searchQuery]);
@@ -150,7 +151,7 @@ export function Sidebar({
   const handleViewChange = (newView: 'chats' | 'notes' | 'flowcharts') => {
     setView(newView);
     setSearchQuery('');
-    
+
     if (newView === 'chats') {
       const conversationToSelect = sortedConversations.length > 0 ? sortedConversations[0].id : null;
       onSelectConversation(conversationToSelect);
@@ -169,10 +170,10 @@ export function Sidebar({
       <div className="p-2 border-b border-[var(--color-border)] flex flex-col gap-2">
         <div className="flex items-center justify-between">
           {!isFolded && (
-            <a 
-              href="https://tanmay-kalbande.github.io/" 
-              target="_blank" 
-              rel="noopener noreferrer" 
+            <a
+              href="https://tanmay-kalbande.github.io/"
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center gap-2.5 group px-2"
             >
               <img src="/white-logo.png" alt="Logo" className="w-6 h-6" />
@@ -182,6 +183,7 @@ export function Sidebar({
             </a>
           )}
           <div className="flex items-center gap-1">
+            {!isFolded && <ThemeToggle />}
             <button
               onClick={onOpenSettings}
               className="p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-card)] rounded-lg transition-colors"
@@ -220,31 +222,30 @@ export function Sidebar({
       {view === 'chats' && (
         <div className="p-2 border-b border-[var(--color-border)]">
           {isFolded ? (
-             <div className="flex justify-center">
-                <button
-                   className="p-2 bg-[var(--color-card)] rounded-lg text-[var(--color-text-primary)]"
-                   title={allModels.find(m => m.id === settings.selectedModel)?.name}
-                >
-                   {React.createElement(allModels.find(m => m.id === settings.selectedModel)?.icon || Sparkles, { className: "w-5 h-5" })}
-                </button>
-             </div>
+            <div className="flex justify-center">
+              <button
+                className="p-2 bg-[var(--color-card)] rounded-lg text-[var(--color-text-primary)]"
+                title={allModels.find(m => m.id === settings.selectedModel)?.name}
+              >
+                {React.createElement(allModels.find(m => m.id === settings.selectedModel)?.icon || Sparkles, { className: "w-5 h-5" })}
+              </button>
+            </div>
           ) : (
             <div className="space-y-2">
               <p className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider px-1">
                 AI Model
               </p>
-              
+
               {/* Grid for Primary Models */}
               <div className="grid grid-cols-2 gap-2">
                 {visibleModels.map(model => (
                   <button
                     key={model.id}
                     onClick={() => onModelChange(model.id as AIModel)}
-                    className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200 border transform hover:scale-105 active:scale-100 ${
-                      settings.selectedModel === model.id
+                    className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200 border transform hover:scale-105 active:scale-100 ${settings.selectedModel === model.id
                         ? 'bg-[var(--color-card)] border-[var(--color-border)] text-white scale-105'
                         : 'bg-transparent border-transparent hover:bg-[var(--color-card)] text-[var(--color-text-secondary)] hover:text-white'
-                    }`}
+                      }`}
                     title={model.name}
                   >
                     <model.icon className="w-4 h-4" />
@@ -297,11 +298,10 @@ export function Sidebar({
                 <div
                   key={conversation.id}
                   onClick={() => onSelectConversation(conversation.id)}
-                  className={`group relative flex items-center gap-2 ${isFolded ? 'justify-center p-2.5' : 'p-2'} rounded-lg cursor-pointer transition-colors ${
-                    activeView === 'chat' && currentConversationId === conversation.id
+                  className={`group relative flex items-center gap-2 ${isFolded ? 'justify-center p-2.5' : 'p-2'} rounded-lg cursor-pointer transition-colors ${activeView === 'chat' && currentConversationId === conversation.id
                       ? 'bg-[var(--color-accent-bg)] text-[var(--color-accent-text)]'
                       : 'hover:bg-[var(--color-card)] text-[var(--color-text-primary)]'
-                  }`}
+                    }`}
                   title={conversation.title}
                 >
                   {isFolded ? (
@@ -319,7 +319,7 @@ export function Sidebar({
                           <Pin className="w-2.5 h-2.5 absolute -top-1 -right-1 text-yellow-400" />
                         )}
                       </div>
-                      
+
                       {editingId === conversation.id ? (
                         <input
                           type="text"
@@ -336,27 +336,27 @@ export function Sidebar({
                           {conversation.title}
                         </div>
                       )}
-                      
+
                       <div className="absolute inset-y-0 right-0 flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none group-hover:pointer-events-auto">
                         <div className="flex items-center pl-8 pr-1.5 h-full bg-gradient-to-l from-[var(--color-card)] to-transparent">
                           <div className="flex gap-0.5 flex-shrink-0">
                             <button
                               onClick={(e) => { e.stopPropagation(); onTogglePinConversation(conversation.id); }}
-                              className={`p-1 rounded ${ currentConversationId === conversation.id ? 'hover:bg-black/10' : 'hover:bg-[var(--color-border)]' }`}
+                              className={`p-1 rounded ${currentConversationId === conversation.id ? 'hover:bg-black/10' : 'hover:bg-[var(--color-border)]'}`}
                               title={conversation.isPinned ? 'Unpin' : 'Pin'}
                             >
                               <Pin className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={(e) => { e.stopPropagation(); handleStartEditing(conversation); }}
-                              className={`p-1 rounded ${ currentConversationId === conversation.id ? 'hover:bg-black/10' : 'hover:bg-[var(--color-border)]' }`}
+                              className={`p-1 rounded ${currentConversationId === conversation.id ? 'hover:bg-black/10' : 'hover:bg-[var(--color-border)]'}`}
                               title="Rename"
                             >
                               <Edit className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={(e) => { e.stopPropagation(); onDeleteConversation(conversation.id); }}
-                              className={`p-1 rounded ${ currentConversationId === conversation.id ? 'hover:bg-black/10 text-red-400' : 'hover:bg-red-900/30 text-red-400' }`}
+                              className={`p-1 rounded ${currentConversationId === conversation.id ? 'hover:bg-black/10 text-red-400' : 'hover:bg-red-900/30 text-red-400'}`}
                               title="Delete"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -391,11 +391,10 @@ export function Sidebar({
                 <div
                   key={note.id}
                   onClick={() => onSelectNote(note.id)}
-                  className={`group p-2.5 rounded-lg cursor-pointer transition-colors ${
-                    activeView === 'note' && currentNoteId === note.id
+                  className={`group p-2.5 rounded-lg cursor-pointer transition-colors ${activeView === 'note' && currentNoteId === note.id
                       ? 'bg-[var(--color-accent-bg)] text-[var(--color-accent-text)]'
                       : 'hover:bg-[var(--color-card)] text-[var(--color-text-primary)]'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-start gap-2 flex-1 min-w-0">
@@ -440,11 +439,10 @@ export function Sidebar({
                 <div
                   key={flowchart.id}
                   onClick={() => onSelectFlowchart(flowchart.id)}
-                  className={`group p-2.5 rounded-lg cursor-pointer transition-colors ${
-                    activeView === 'flowchart' && currentFlowchartId === flowchart.id
+                  className={`group p-2.5 rounded-lg cursor-pointer transition-colors ${activeView === 'flowchart' && currentFlowchartId === flowchart.id
                       ? 'bg-[var(--color-accent-bg)] text-[var(--color-accent-text)]'
                       : 'hover:bg-[var(--color-card)] text-[var(--color-text-primary)]'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -505,11 +503,10 @@ export function Sidebar({
         <div className={`${isFolded ? 'space-y-1 flex flex-col' : 'grid grid-cols-3 gap-1'}`}>
           <button
             onClick={() => handleViewChange('chats')}
-            className={`flex flex-col items-center gap-1 p-2 rounded-lg w-full transition-colors ${
-              view === 'chats' 
-                ? 'text-[var(--color-text-primary)] bg-[var(--color-card)]' 
+            className={`flex flex-col items-center gap-1 p-2 rounded-lg w-full transition-colors ${view === 'chats'
+                ? 'text-[var(--color-text-primary)] bg-[var(--color-card)]'
                 : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-card)]'
-            }`}
+              }`}
             title="Chats"
           >
             <MessageSquare className="w-5 h-5" />
@@ -517,11 +514,10 @@ export function Sidebar({
           </button>
           <button
             onClick={() => handleViewChange('notes')}
-            className={`flex flex-col items-center gap-1 p-2 rounded-lg w-full transition-colors ${
-              view === 'notes' 
-                ? 'text-[var(--color-text-primary)] bg-[var(--color-card)]' 
+            className={`flex flex-col items-center gap-1 p-2 rounded-lg w-full transition-colors ${view === 'notes'
+                ? 'text-[var(--color-text-primary)] bg-[var(--color-card)]'
                 : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-card)]'
-            }`}
+              }`}
             title="Notes"
           >
             <Book className="w-5 h-5" />
@@ -529,11 +525,10 @@ export function Sidebar({
           </button>
           <button
             onClick={() => handleViewChange('flowcharts')}
-            className={`flex flex-col items-center gap-1 p-2 rounded-lg w-full transition-colors ${
-              view === 'flowcharts' 
-                ? 'text-[var(--color-text-primary)] bg-[var(--color-card)]' 
+            className={`flex flex-col items-center gap-1 p-2 rounded-lg w-full transition-colors ${view === 'flowcharts'
+                ? 'text-[var(--color-text-primary)] bg-[var(--color-card)]'
                 : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-card)]'
-            }`}
+              }`}
             title="Flowcharts"
           >
             <GitBranch className="w-5 h-5" />
