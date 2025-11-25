@@ -858,28 +858,16 @@
     -webkit-backdrop-filter: blur(12px) saturate(180%);
   }
 
-  /* Generic modals get transparency */
+  /* Modal backdrop gets blur, but modal content stays solid */
   .modal-backdrop {
     backdrop-filter: blur(12px) saturate(180%);
     -webkit-backdrop-filter: blur(12px) saturate(180%);
   }
 
-  /* Settings modal content should be OPAQUE (not transparent) */
-  .settings-modal-content {
-    background: #1F1F1F !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-  }
-
-  /* Other modal content gets transparency */
-  .modal-content:not(.settings-modal-content) {
-    backdrop-filter: blur(12px) saturate(180%);
-    -webkit-backdrop-filter: blur(12px) saturate(180%);
-  }
-
-  /* Chat input and message bubbles */
+  /* Chat input and message bubbles with transparency */
   .chat-input-form,
   .message-bubble {
+    background: rgba(31, 31, 31, 0.8) !important;
     backdrop-filter: blur(10px) saturate(160%);
     -webkit-backdrop-filter: blur(10px) saturate(160%);
   }
