@@ -56,9 +56,9 @@ async function* streamOpenAICompatResponse(
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
-      body: JSON.stringify({ 
-        model, 
-        messages: messagesWithSystemPrompt, 
+      body: JSON.stringify({
+        model,
+        messages: messagesWithSystemPrompt,
         stream: true,
         max_tokens: 8192,
         temperature: 0.2 // Lower temperature for JSON/Flowcharts
@@ -86,16 +86,16 @@ async function* streamOpenAICompatResponse(
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        
+
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
         buffer = lines.pop() || '';
-        
+
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             const data = line.substring(6).trim();
             if (data === '[DONE]') return;
-            
+
             try {
               const json = JSON.parse(data);
               const chunk = json.choices?.[0]?.delta?.content;
@@ -137,13 +137,13 @@ class AiService {
     return tutorPrompts[this.settings.selectedTutorMode] || tutorPrompts.standard;
   }
 
-  // UPDATED: Now uses the *currently selected model* to generate the flowchart
+  // Uses the currently selected model to generate flowcharts
   public async *generateFlowchartResponse(
     messages: { role: string; content: string }[]
   ): AsyncGenerator<string> {
     const model = this.settings.selectedModel;
     const userMessages = messages.map(m => ({ role: m.role, content: m.content }));
-    
+
     // Specific system prompt for Flowcharts
     const systemPrompt = 'You are a helpful assistant that generates flowcharts in valid JSON format. Do not output markdown code blocks, just raw JSON.';
 
@@ -151,7 +151,7 @@ class AiService {
       // 1. GOOGLE MODELS
       if (model.startsWith('gemini') || model.startsWith('gemma')) {
         if (!this.settings.googleApiKey) throw new Error('Google API key not set');
-        
+
         const googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${this.settings.googleApiKey}&alt=sse`;
 
         const googleMessages = [
@@ -170,7 +170,7 @@ class AiService {
           const response = await fetch(googleUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
               contents: googleMessages,
               generationConfig: { responseMimeType: "application/json" } // Force JSON
             }),
@@ -192,11 +192,11 @@ class AiService {
             const lines = chunk.split('\n');
             for (const line of lines) {
               if (line.startsWith('data: ')) {
-                 try {
-                    const json = JSON.parse(line.substring(6));
-                    const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
-                    if (text) yield text;
-                 } catch (e) {}
+                try {
+                  const json = JSON.parse(line.substring(6));
+                  const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
+                  if (text) yield text;
+                } catch (e) { }
               }
             }
           }
@@ -280,7 +280,7 @@ class AiService {
       // GOOGLE MODELS
       if (model.startsWith('gemini') || model.startsWith('gemma')) {
         if (!this.settings.googleApiKey) throw new Error('Google API key not set');
-        
+
         // Ensure we use valid 2.5 models if available, fallback logic included in ID
         const googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${this.settings.googleApiKey}&alt=sse`;
 
@@ -318,7 +318,7 @@ class AiService {
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            
+
             const chunk = decoder.decode(value);
             const lines = chunk.split('\n');
             for (const line of lines) {
@@ -353,23 +353,23 @@ class AiService {
       // ZHIPU / CEREBRAS (Check specific ID first for collisions)
       else if (model.includes('glm')) {
         if (model === 'zai-glm-4.6') {
-             if (!this.settings.cerebrasApiKey) throw new Error('Cerebras API key not set for ZAI GLM');
-             yield* streamOpenAICompatResponse(
-              'https://api.cerebras.ai/v1/chat/completions',
-              this.settings.cerebrasApiKey,
-              model,
-              userMessages,
-              systemPrompt
-            );
+          if (!this.settings.cerebrasApiKey) throw new Error('Cerebras API key not set for ZAI GLM');
+          yield* streamOpenAICompatResponse(
+            'https://api.cerebras.ai/v1/chat/completions',
+            this.settings.cerebrasApiKey,
+            model,
+            userMessages,
+            systemPrompt
+          );
         } else {
-            if (!this.settings.zhipuApiKey) throw new Error('ZhipuAI API key not set');
-            yield* streamOpenAICompatResponse(
-              'https://open.bigmodel.cn/api/paas/v4/chat/completions',
-              this.settings.zhipuApiKey,
-              model,
-              userMessages,
-              systemPrompt
-            );
+          if (!this.settings.zhipuApiKey) throw new Error('ZhipuAI API key not set');
+          yield* streamOpenAICompatResponse(
+            'https://open.bigmodel.cn/api/paas/v4/chat/completions',
+            this.settings.zhipuApiKey,
+            model,
+            userMessages,
+            systemPrompt
+          );
         }
       }
 
@@ -455,8 +455,8 @@ class AiService {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{ role: 'user', parts: [{ text: prompt }] }], 
-            generationConfig: { responseMimeType: "application/json", temperature: 0.3 } 
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: "application/json", temperature: 0.3 }
           }),
           signal: controller.signal,
         }
@@ -464,10 +464,10 @@ class AiService {
 
       clearTimeout(timeoutId);
       if (!response.ok) throw new Error(await response.text());
-      
+
       const data = await response.json();
       const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      
+
       if (!textResponse) throw new Error('No content returned from AI');
 
       let parsed;
@@ -477,7 +477,7 @@ class AiService {
         console.error("JSON Parse Error:", e);
         throw new Error("Failed to parse AI response as JSON");
       }
-      
+
       // FIXED: Handle different possible valid JSON structures safely
       let questionsArray: any[] = [];
       if (Array.isArray(parsed)) {
@@ -499,33 +499,33 @@ class AiService {
         // Helper to find answer index safely
         let correctIndex = -1;
         const options = Array.isArray(q.options) ? q.options : ["Yes", "No", "Maybe", "Unsure"];
-        
+
         if (q.answer) {
-            // Try exact match
-            correctIndex = options.indexOf(q.answer);
-            
-            // Try string match (trimmed)
-            if (correctIndex === -1) {
-                correctIndex = options.findIndex((opt: string) => 
-                    String(opt).trim().toLowerCase() === String(q.answer).trim().toLowerCase()
-                );
-            }
-            
-            // Try letter matching (A, B, C, D)
-            if (correctIndex === -1 && /^[A-D]$/i.test(q.answer)) {
-                correctIndex = q.answer.toUpperCase().charCodeAt(0) - 65;
-            }
+          // Try exact match
+          correctIndex = options.indexOf(q.answer);
+
+          // Try string match (trimmed)
+          if (correctIndex === -1) {
+            correctIndex = options.findIndex((opt: string) =>
+              String(opt).trim().toLowerCase() === String(q.answer).trim().toLowerCase()
+            );
+          }
+
+          // Try letter matching (A, B, C, D)
+          if (correctIndex === -1 && /^[A-D]$/i.test(q.answer)) {
+            correctIndex = q.answer.toUpperCase().charCodeAt(0) - 65;
+          }
         }
 
         // Fallback to 0 if still not found (prevent crash)
         if (correctIndex === -1) correctIndex = 0;
 
         return {
-            id: generateId(),
-            question: q.question || "Untitled Question",
-            options: options,
-            correctAnswer: correctIndex,
-            explanation: q.explanation || 'No explanation provided.',
+          id: generateId(),
+          question: q.question || "Untitled Question",
+          options: options,
+          correctAnswer: correctIndex,
+          explanation: q.explanation || 'No explanation provided.',
         };
       });
 
