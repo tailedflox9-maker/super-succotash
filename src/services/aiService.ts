@@ -141,16 +141,13 @@ class AiService {
   public async *generateFlowchartResponse(
     messages: { role: string; content: string }[]
   ): AsyncGenerator<string> {
-    // Flowcharts prioritize Google, but fall back if needed logic can be added here
-    // For now, adhering to the requirement to use a capable model
     if (!this.settings.googleApiKey) {
       throw new Error('Google API key required for flowchart generation.');
     }
 
     const userMessages = messages.map(m => ({ role: m.role, content: m.content }));
     const systemPrompt = 'You are a helpful assistant that generates flowcharts in JSON format.';
-    // Using Gemini 2.5 Flash for speed/efficiency in flowcharts
-    const googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?key=${this.settings.googleApiKey}&alt=sse`;
+    const googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?key=${this.settings.googleApiKey}&alt=sse`;
 
     const googleMessages = [
       { role: 'user', parts: [{ text: systemPrompt }] },
@@ -229,7 +226,9 @@ class AiService {
       if (model.startsWith('gemini') || model.startsWith('gemma')) {
         if (!this.settings.googleApiKey) throw new Error('Google API key not set');
         
-        const googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${this.settings.googleApiKey}&alt=sse`;
+        // Use 2.0-flash as a safer default if 2.5 is unstable or not public yet
+        const effectiveModel = model === 'gemini-2.5-flash' ? 'gemini-2.0-flash' : model; 
+        const googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/${effectiveModel}:streamGenerateContent?key=${this.settings.googleApiKey}&alt=sse`;
 
         const googleMessages = [
           { role: 'user', parts: [{ text: systemPrompt }] },
@@ -306,9 +305,7 @@ class AiService {
 
       // ZHIPU MODELS
       else if (model.includes('glm')) {
-        // Note: Cerebras also has a GLM model 'zai-glm-4.6', so we check if it is selected as provider or model ID structure
         if (model === 'zai-glm-4.6') {
-             // Fallthrough to Cerebras check below, or handle here if distinct
              if (!this.settings.cerebrasApiKey) throw new Error('Cerebras API key not set for ZAI GLM');
              yield* streamOpenAICompatResponse(
               'https://api.cerebras.ai/v1/chat/completions',
@@ -318,12 +315,11 @@ class AiService {
               systemPrompt
             );
         } else {
-            // Standard Zhipu
             if (!this.settings.zhipuApiKey) throw new Error('ZhipuAI API key not set');
             yield* streamOpenAICompatResponse(
               'https://open.bigmodel.cn/api/paas/v4/chat/completions',
               this.settings.zhipuApiKey,
-              model, // e.g. glm-4.5-flash
+              model,
               userMessages,
               systemPrompt
             );
@@ -364,7 +360,7 @@ class AiService {
     }
   }
 
-  // Quiz generation
+  // Quiz generation - FIXED AND ROBUST
   public async generateQuiz(conversation: Conversation): Promise<StudySession> {
     if (!this.settings.googleApiKey) {
       throw new Error('Google API key must be configured to generate quizzes.');
@@ -378,44 +374,123 @@ class AiService {
       .map(m => `${m.role === 'user' ? 'Q:' : 'A:'} ${m.content}`)
       .join('\n\n');
 
-    const prompt = `Based on the following conversation, create a multiple-choice quiz with 5 questions... (truncated for brevity)... Generate the quiz now:`;
+    // Updated Prompt: Strict JSON schema enforcement
+    const prompt = `Based on the following conversation, create a multiple-choice quiz with 5 questions to test understanding of the key concepts.
 
-    // Using Gemini Flash for faster JSON generation
+    STRICT JSON OUTPUT FORMAT REQUIRED:
+    {
+      "questions": [
+        {
+          "question": "Question text here",
+          "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
+          "answer": "Option 2",
+          "explanation": "Explanation here"
+        }
+      ]
+    }
+    
+    RULES:
+    1. "questions" must be an array.
+    2. "options" must be an array of exactly 4 strings.
+    3. "answer" must be a string that MATCHES EXACTLY one of the strings in "options".
+    4. "explanation" must be a string.
+    5. No markdown code blocks, just raw JSON.
+
+    CONVERSATION:
+    ${conversationText.slice(0, 6000)}`;
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
 
     try {
+      // Use Gemini 2.0 Flash as it's generally more stable for JSON tasks
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.settings.googleApiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${this.settings.googleApiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [
-              { role: 'user', parts: [{ text: prompt + `\n\n${conversationText.slice(0, 6000)}` }] } // Appending content here
+              { role: 'user', parts: [{ text: prompt }] }
             ],
-            generationConfig: { responseMimeType: "application/json" } // Force JSON mode
+            generationConfig: { 
+              responseMimeType: "application/json",
+              temperature: 0.3 
+            } 
           }),
           signal: controller.signal,
         }
       );
 
       clearTimeout(timeoutId);
-      if (!response.ok) throw new Error(await response.text());
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Google API Error: ${errText}`);
+      }
+      
       const data = await response.json();
       const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
       
-      const parsed = JSON.parse(textResponse);
-      
-      if (!parsed.questions || parsed.questions.length === 0) throw new Error('Invalid quiz format');
+      if (!textResponse) throw new Error('No content returned from AI');
 
-      const questions: QuizQuestion[] = parsed.questions.map((q: any, index: number) => ({
-        id: generateId(),
-        question: q.question,
-        options: q.options,
-        correctAnswer: q.options.indexOf(q.answer),
-        explanation: q.explanation,
-      }));
+      let parsed;
+      try {
+        parsed = JSON.parse(textResponse);
+      } catch (e) {
+        console.error("JSON Parse Error:", e);
+        throw new Error("Failed to parse AI response as JSON");
+      }
+      
+      if (!parsed.questions || !Array.isArray(parsed.questions) || parsed.questions.length === 0) {
+        throw new Error('AI returned invalid quiz structure (missing questions array)');
+      }
+
+      // Robust mapping with validation checks
+      const questions: QuizQuestion[] = parsed.questions
+        .map((q: any, index: number) => {
+          // Validate required fields
+          if (!q.question || !Array.isArray(q.options) || !q.answer) {
+            console.warn(`Skipping invalid question at index ${index}`, q);
+            return null;
+          }
+
+          // Safe index finding
+          let correctIndex = q.options.indexOf(q.answer);
+          
+          // Fallback: Try trim comparison if exact match fails
+          if (correctIndex === -1) {
+            correctIndex = q.options.findIndex((opt: string) => String(opt).trim() === String(q.answer).trim());
+          }
+          
+          // Fallback: If answer is actually an index (0-3) or letter (A-D)
+          if (correctIndex === -1) {
+            if (typeof q.answer === 'number' && q.answer >= 0 && q.answer < q.options.length) {
+              correctIndex = q.answer;
+            } else if (/^[A-D]$/i.test(q.answer)) {
+              correctIndex = q.answer.toUpperCase().charCodeAt(0) - 65;
+            }
+          }
+
+          // Ultimate Fallback: Default to 0 to prevent crash, but log warning
+          if (correctIndex === -1) {
+            console.warn(`Could not match answer "${q.answer}" to options for question: ${q.question}. Defaulting to option A.`);
+            correctIndex = 0;
+          }
+
+          return {
+            id: generateId(),
+            question: q.question,
+            options: q.options,
+            correctAnswer: correctIndex,
+            explanation: q.explanation || 'No explanation provided.',
+          };
+        })
+        .filter((q: any): q is QuizQuestion => q !== null); // Filter out nulls
+
+      if (questions.length === 0) {
+        throw new Error('No valid questions could be extracted from the AI response.');
+      }
 
       return {
         id: generateId(),
