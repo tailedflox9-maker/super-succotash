@@ -19,8 +19,12 @@ import { storageUtils } from './utils/storage';
 import { aiService } from './services/aiService';
 import { generateFlowchartFromConversation } from './services/flowchartGenerator';
 import { detectBestMode, shouldSuggestMode } from './services/modeDetection';
+import { JourneyCard } from './components/JourneyCard';
+import { JourneyView } from './components/JourneyView';
+import type { ConceptJourney } from './types/journey';
+import { isExplorableTopic, extractTopic } from './services/journeyDetection';
 
-type ActiveView = 'chat' | 'note' | 'flowchart';
+type ActiveView = 'chat' | 'note' | 'flowchart' | 'journey';
 
 interface NotificationState {
   show: boolean;
@@ -33,11 +37,13 @@ function App() {
   const [conversations, setConversations] = useState<Conversation[]>(() => storageUtils.getConversations());
   const [notes, setNotes] = useState<Note[]>(() => storageUtils.getNotes());
   const [flowcharts, setFlowcharts] = useState<Flowchart[]>(() => storageUtils.getFlowcharts());
+  const [journeys, setJourneys] = useState<ConceptJourney[]>(() => storageUtils.getJourneys());
   const [settings, setSettings] = useState<APISettings>(() => storageUtils.getSettings());
   const [activeView, setActiveView] = useState<ActiveView>('chat');
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [currentNoteId, setCurrentNoteId] = useState<string | null>(null);
   const [currentFlowchartId, setCurrentFlowchartId] = useState<string | null>(null);
+  const [currentJourneyId, setCurrentJourneyId] = useState<string | null>(null);
   const [sidebarFolded, setSidebarFolded] = useState(() => {
     const stored = localStorage.getItem('ai-tutor-sidebar-folded');
     return stored ? JSON.parse(stored) : false;
@@ -166,6 +172,13 @@ function App() {
     }, 500);
     return () => clearTimeout(timeoutId);
   }, [flowcharts]);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      storageUtils.saveJourneys(journeys);
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [journeys]);
 
   useEffect(() => {
     localStorage.setItem('ai-tutor-sidebar-folded', JSON.stringify(sidebarFolded));
@@ -732,6 +745,37 @@ function App() {
     }
   };
 
+  // --- JOURNEY HANDLERS ---
+  const handleStartJourney = async (topic: string) => {
+    try {
+      setIsFlowchartLoading(true);
+      const journey = await aiService.generateConceptJourney(topic);
+      journey.conversationId = currentConversationId || '';
+
+      setJourneys((prev: ConceptJourney[]) => [journey, ...prev]);
+      setCurrentJourneyId(journey.id);
+      setActiveView('journey');
+
+      showNotification(`Journey started: ${topic}`, 'success');
+    } catch (error) {
+      console.error('Failed to create journey:', error);
+      showNotification('Failed to create journey', 'error');
+    } finally {
+      setIsFlowchartLoading(false);
+    }
+  };
+
+  const handleUpdateJourney = (updatedJourney: ConceptJourney) => {
+    setJourneys((prev: ConceptJourney[]) => prev.map((j: ConceptJourney) =>
+      j.id === updatedJourney.id ? updatedJourney : j
+    ));
+  };
+
+  const handleCloseJourney = () => {
+    setActiveView('chat');
+    setCurrentJourneyId(null);
+  };
+
   const handleInstallApp = async () => {
     if (await installApp()) {
       console.log('App installed');
@@ -840,11 +884,17 @@ function App() {
           </>
         ) : activeView === 'note' ? (
           <NoteView note={currentNote} />
-        ) : (
+        ) : activeView === 'flowchart' ? (
           <FlowchartView
             flowchart={currentFlowchart}
             onSave={handleSaveFlowchart}
             onExport={handleExportFlowchart}
+          />
+        ) : activeView === 'journey' && currentJourneyId && (
+          <JourneyView
+            journey={journeys.find(j => j.id === currentJourneyId)!}
+            onUpdate={handleUpdateJourney}
+            onClose={handleCloseJourney}
           />
         )}
       </div>
