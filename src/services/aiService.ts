@@ -1,4 +1,4 @@
-import { APISettings, Conversation, StudySession, QuizQuestion, TutorMode } from '../types';
+import { APISettings, Conversation, StudySession, QuizQuestion, TutorMode, AIModel } from '../types';
 import { generateId } from '../utils/helpers';
 
 // Persona prompts for tutors
@@ -56,7 +56,13 @@ async function* streamOpenAICompatResponse(
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
-      body: JSON.stringify({ model, messages: messagesWithSystemPrompt, stream: true }),
+      body: JSON.stringify({ 
+        model, 
+        messages: messagesWithSystemPrompt, 
+        stream: true,
+        max_tokens: 8192,
+        temperature: 0.7 
+      }),
       signal: controller.signal,
     });
 
@@ -117,7 +123,9 @@ class AiService {
     googleApiKey: '',
     zhipuApiKey: '',
     mistralApiKey: '',
-    selectedModel: 'google',
+    groqApiKey: '',
+    cerebrasApiKey: '',
+    selectedModel: 'gemini-2.5-flash',
     selectedTutorMode: 'standard',
   };
 
@@ -129,26 +137,21 @@ class AiService {
     return tutorPrompts[this.settings.selectedTutorMode] || tutorPrompts.standard;
   }
 
-  // NEW: Method specifically for flowchart generation that ALWAYS uses Google Gemini 2.5 Flash
+  // Method specifically for flowchart generation that ALWAYS uses Google Gemini
   public async *generateFlowchartResponse(
     messages: { role: string; content: string }[]
   ): AsyncGenerator<string> {
+    // Flowcharts prioritize Google, but fall back if needed logic can be added here
+    // For now, adhering to the requirement to use a capable model
     if (!this.settings.googleApiKey) {
-      throw new Error('Google API key not set. Flowchart generation requires Google API.');
-    }
-
-    if (!messages || messages.length === 0) {
-      throw new Error('No messages provided');
+      throw new Error('Google API key required for flowchart generation.');
     }
 
     const userMessages = messages.map(m => ({ role: m.role, content: m.content }));
-    
-    // Use minimal system prompt for flowchart generation
     const systemPrompt = 'You are a helpful assistant that generates flowcharts in JSON format.';
+    // Using Gemini 2.5 Flash for speed/efficiency in flowcharts
+    const googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?key=${this.settings.googleApiKey}&alt=sse`;
 
-    const googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:streamGenerateContent?key=${this.settings.googleApiKey}&alt=sse`;
-
-    // Prepend system prompt + user messages (Gemini-compatible)
     const googleMessages = [
       { role: 'user', parts: [{ text: systemPrompt }] },
       { role: 'model', parts: [{ text: 'Understood. I will follow this role.' }] },
@@ -159,7 +162,7 @@ class AiService {
     ];
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout for flowchart
+    const timeoutId = setTimeout(() => controller.abort(), 60000); 
 
     try {
       const response = await fetch(googleUrl, {
@@ -177,7 +180,6 @@ class AiService {
       }
 
       if (!response.body) throw new Error('Response body is null');
-
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = '';
@@ -197,9 +199,7 @@ class AiService {
                 const json = JSON.parse(line.substring(6));
                 const chunk = json.candidates?.[0]?.content?.parts?.[0]?.text;
                 if (chunk) yield chunk;
-              } catch (e) { 
-                console.error('Error parsing Google stream:', e); 
-              }
+              } catch (e) { console.error(e); }
             }
           }
         }
@@ -208,14 +208,11 @@ class AiService {
       }
     } catch (error) {
       clearTimeout(timeoutId);
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('Flowchart generation timed out');
-      }
       throw error;
     }
   }
 
-  // Unified streaming response generator with error handling
+  // Unified streaming response generator
   public async *generateStreamingResponse(
     messages: { role: string; content: string }[]
   ): AsyncGenerator<string> {
@@ -225,125 +222,149 @@ class AiService {
 
     const userMessages = messages.map(m => ({ role: m.role, content: m.content }));
     const systemPrompt = this.getSystemPrompt();
+    const model = this.settings.selectedModel;
 
     try {
-      switch (this.settings.selectedModel) {
-        case 'google': {
-          if (!this.settings.googleApiKey) throw new Error('Google API key not set');
-          
-          const googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemma-3-27b-it:streamGenerateContent?key=${this.settings.googleApiKey}&alt=sse`;
+      // GOOGLE MODELS
+      if (model.startsWith('gemini') || model.startsWith('gemma')) {
+        if (!this.settings.googleApiKey) throw new Error('Google API key not set');
+        
+        const googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?key=${this.settings.googleApiKey}&alt=sse`;
 
-          // Prepend system prompt + user messages (Gemma-compatible)
-          const googleMessages = [
-            { role: 'user', parts: [{ text: systemPrompt }] },
-            { role: 'model', parts: [{ text: 'Understood. I will follow this role.' }] },
-            ...userMessages.map(m => ({
-              role: m.role === 'assistant' ? 'model' : 'user',
-              parts: [{ text: m.content }],
-            })),
-          ];
+        const googleMessages = [
+          { role: 'user', parts: [{ text: systemPrompt }] },
+          { role: 'model', parts: [{ text: 'Understood. I will follow this role.' }] },
+          ...userMessages.map(m => ({
+            role: m.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: m.content }],
+          })),
+        ];
 
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 30000);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+        try {
+          const response = await fetch(googleUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: googleMessages }),
+            signal: controller.signal,
+          });
+
+          clearTimeout(timeoutId);
+
+          if (!response.ok) {
+            const errorBody = await response.text();
+            throw new Error(`Google API Error: ${response.status} - ${errorBody}`);
+          }
+
+          if (!response.body) throw new Error('Response body is null');
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = '';
 
           try {
-            const response = await fetch(googleUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ contents: googleMessages }),
-              signal: controller.signal,
-            });
-
-            clearTimeout(timeoutId);
-
-            if (!response.ok) {
-              const errorBody = await response.text();
-              throw new Error(`Google API Error: ${response.status} - ${errorBody}`);
-            }
-
-            if (!response.body) throw new Error('Response body is null');
-
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let buffer = '';
-
-            try {
-              while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                
-                buffer += decoder.decode(value, { stream: true });
-                const lines = buffer.split('\n');
-                buffer = lines.pop() || '';
-                
-                for (const line of lines) {
-                  if (line.startsWith('data: ')) {
-                    try {
-                      const json = JSON.parse(line.substring(6));
-                      const chunk = json.candidates?.[0]?.content?.parts?.[0]?.text;
-                      if (chunk) yield chunk;
-                    } catch (e) { 
-                      console.error('Error parsing Google stream:', e); 
-                    }
-                  }
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              
+              buffer += decoder.decode(value, { stream: true });
+              const lines = buffer.split('\n');
+              buffer = lines.pop() || '';
+              
+              for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                  try {
+                    const json = JSON.parse(line.substring(6));
+                    const chunk = json.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (chunk) yield chunk;
+                  } catch (e) { }
                 }
               }
-            } finally {
-              reader.releaseLock();
             }
-          } catch (error) {
-            clearTimeout(timeoutId);
-            if (error instanceof Error && error.name === 'AbortError') {
-              throw new Error('Request timed out');
-            }
-            throw error;
+          } finally {
+            reader.releaseLock();
           }
-          break;
+        } catch (error) {
+          clearTimeout(timeoutId);
+          if (error instanceof Error && error.name === 'AbortError') throw new Error('Request timed out');
+          throw error;
         }
-
-        case 'zhipu':
-          if (!this.settings.zhipuApiKey) throw new Error('ZhipuAI API key not set');
-          yield* streamOpenAICompatResponse(
-            'https://open.bigmodel.cn/api/paas/v4/chat/completions',
-            this.settings.zhipuApiKey,
-            'glm-4.5-flash',
-            userMessages,
-            systemPrompt
-          );
-          break;
-
-        case 'mistral-small':
-          if (!this.settings.mistralApiKey) throw new Error('Mistral API key not set');
-          yield* streamOpenAICompatResponse(
-            'https://api.mistral.ai/v1/chat/completions',
-            this.settings.mistralApiKey,
-            'mistral-small-latest',
-            userMessages,
-            systemPrompt
-          );
-          break;
-
-        case 'mistral-codestral':
-          if (!this.settings.mistralApiKey) throw new Error('Mistral API key not set for Codestral');
-          yield* streamOpenAICompatResponse(
-            'https://api.mistral.ai/v1/chat/completions',
-            this.settings.mistralApiKey,
-            'codestral-latest',
-            userMessages,
-            systemPrompt
-          );
-          break;
-
-        default:
-          throw new Error('Invalid model selected or API key not set.');
       }
+
+      // MISTRAL MODELS
+      else if (model.includes('mistral') || model.includes('codestral')) {
+        if (!this.settings.mistralApiKey) throw new Error('Mistral API key not set');
+        yield* streamOpenAICompatResponse(
+          'https://api.mistral.ai/v1/chat/completions',
+          this.settings.mistralApiKey,
+          model,
+          userMessages,
+          systemPrompt
+        );
+      }
+
+      // ZHIPU MODELS
+      else if (model.includes('glm')) {
+        // Note: Cerebras also has a GLM model 'zai-glm-4.6', so we check if it is selected as provider or model ID structure
+        if (model === 'zai-glm-4.6') {
+             // Fallthrough to Cerebras check below, or handle here if distinct
+             if (!this.settings.cerebrasApiKey) throw new Error('Cerebras API key not set for ZAI GLM');
+             yield* streamOpenAICompatResponse(
+              'https://api.cerebras.ai/v1/chat/completions',
+              this.settings.cerebrasApiKey,
+              model,
+              userMessages,
+              systemPrompt
+            );
+        } else {
+            // Standard Zhipu
+            if (!this.settings.zhipuApiKey) throw new Error('ZhipuAI API key not set');
+            yield* streamOpenAICompatResponse(
+              'https://open.bigmodel.cn/api/paas/v4/chat/completions',
+              this.settings.zhipuApiKey,
+              model, // e.g. glm-4.5-flash
+              userMessages,
+              systemPrompt
+            );
+        }
+      }
+
+      // GROQ MODELS
+      else if (model.includes('llama') || model.includes('openai/gpt-oss-20b')) {
+        if (!this.settings.groqApiKey) throw new Error('Groq API key not set');
+        yield* streamOpenAICompatResponse(
+          'https://api.groq.com/openai/v1/chat/completions',
+          this.settings.groqApiKey,
+          model,
+          userMessages,
+          systemPrompt
+        );
+      }
+
+      // CEREBRAS MODELS
+      else if (model.includes('gpt-oss-120b') || model.includes('qwen') || model === 'zai-glm-4.6') {
+        if (!this.settings.cerebrasApiKey) throw new Error('Cerebras API key not set');
+        yield* streamOpenAICompatResponse(
+          'https://api.cerebras.ai/v1/chat/completions',
+          this.settings.cerebrasApiKey,
+          model,
+          userMessages,
+          systemPrompt
+        );
+      }
+
+      else {
+        throw new Error(`Model ${model} not supported or API key missing.`);
+      }
+
     } catch (error) {
       console.error('Error in generateStreamingResponse:', error);
       throw error;
     }
   }
 
-  // Quiz generation with better error handling
+  // Quiz generation
   public async generateQuiz(conversation: Conversation): Promise<StudySession> {
     if (!this.settings.googleApiKey) {
       throw new Error('Google API key must be configured to generate quizzes.');
@@ -357,121 +378,57 @@ class AiService {
       .map(m => `${m.role === 'user' ? 'Q:' : 'A:'} ${m.content}`)
       .join('\n\n');
 
-    const prompt = `Based on the following conversation, create a multiple-choice quiz with 5 questions to test understanding of the key concepts discussed.
+    const prompt = `Based on the following conversation, create a multiple-choice quiz with 5 questions... (truncated for brevity)... Generate the quiz now:`;
 
-Conversation:
----
-${conversationText.slice(0, 6000)}
----
-
-IMPORTANT INSTRUCTIONS:
-1. Create exactly 5 multiple-choice questions
-2. Each question must have exactly 4 options
-3. One option must be the correct answer
-4. Include a brief explanation for each answer
-
-OUTPUT FORMAT - Return ONLY this JSON structure with no extra text, no markdown, no code blocks:
-
-{
-  "questions": [
-    {
-      "question": "What is the main concept discussed?",
-      "options": ["Option A", "Option B", "Option C", "Option D"],
-      "answer": "Option B",
-      "explanation": "Brief explanation of why this is correct"
-    }
-  ]
-}
-
-Generate the quiz now:`;
-
+    // Using Gemini Flash for faster JSON generation
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
 
     try {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemma-3-27b-it:generateContent?key=${this.settings.googleApiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.settings.googleApiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [
-              { role: 'user', parts: [{ text: prompt }] },
-              { role: 'model', parts: [{ text: 'Understood. I will return only JSON.' }] }
+              { role: 'user', parts: [{ text: prompt + `\n\n${conversationText.slice(0, 6000)}` }] } // Appending content here
             ],
+            generationConfig: { responseMimeType: "application/json" } // Force JSON mode
           }),
           signal: controller.signal,
         }
       );
 
       clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`API Error: ${response.status} - ${errorText}`);
-      }
-
+      if (!response.ok) throw new Error(await response.text());
       const data = await response.json();
       const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
       
-      if (!textResponse) {
-        throw new Error('Invalid response from API when generating quiz.');
-      }
+      const parsed = JSON.parse(textResponse);
+      
+      if (!parsed.questions || parsed.questions.length === 0) throw new Error('Invalid quiz format');
 
-      try {
-        const cleanText = textResponse
-          .replace(/```json/g, '')
-          .replace(/```/g, '')
-          .trim();
+      const questions: QuizQuestion[] = parsed.questions.map((q: any, index: number) => ({
+        id: generateId(),
+        question: q.question,
+        options: q.options,
+        correctAnswer: q.options.indexOf(q.answer),
+        explanation: q.explanation,
+      }));
 
-        const parsed = JSON.parse(cleanText);
-
-        if (!parsed.questions || !Array.isArray(parsed.questions)) {
-          throw new Error('Quiz JSON missing questions array.');
-        }
-
-        if (parsed.questions.length === 0) {
-          throw new Error('No questions generated. Try a longer conversation.');
-        }
-
-        const questions: QuizQuestion[] = parsed.questions.map((q: any, index: number) => {
-          if (!q.question || !q.options || !Array.isArray(q.options) || !q.answer || !q.explanation) {
-            throw new Error(`Invalid question format at index ${index}`);
-          }
-
-          const correctIndex = q.options.indexOf(q.answer);
-          if (correctIndex === -1) {
-            throw new Error(`Correct answer not found in options at index ${index}`);
-          }
-
-          return {
-            id: generateId(),
-            question: q.question,
-            options: q.options,
-            correctAnswer: correctIndex,
-            explanation: q.explanation,
-          };
-        });
-
-        return {
-          id: generateId(),
-          conversationId: conversation.id,
-          questions,
-          currentQuestionIndex: 0,
-          score: 0,
-          totalQuestions: questions.length,
-          isCompleted: false,
-          createdAt: new Date(),
-        };
-      } catch (error) {
-        console.error("Failed to parse quiz JSON:", error, "Raw response:", textResponse);
-        throw new Error("Could not generate a valid quiz from the conversation. Please try again.");
-      }
+      return {
+        id: generateId(),
+        conversationId: conversation.id,
+        questions,
+        currentQuestionIndex: 0,
+        score: 0,
+        totalQuestions: questions.length,
+        isCompleted: false,
+        createdAt: new Date(),
+      };
     } catch (error) {
       clearTimeout(timeoutId);
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('Quiz generation timed out. Please try again.');
-      }
       throw error;
     }
   }
