@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import {
   Plus, MessageSquare, Settings, Trash2, X, ChevronLeft, ChevronRight,
   Sparkles, Brain, Cloud, Terminal, Search, Pin, Edit, Book, GitBranch,
-  Cpu, Zap, Cpu as Chip
+  Zap, Cpu
 } from 'lucide-react';
 import { Conversation, Note, Flowchart, AIModel } from '../types';
 
@@ -61,7 +61,7 @@ export function Sidebar({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
   const [view, setView] = useState<'chats' | 'notes' | 'flowcharts'>('chats');
-  const [modelGroup, setModelGroup] = useState<'google' | 'mistral' | 'others'>('google');
+  const [modelGroup, setModelGroup] = useState<'google' | 'mistral' | 'fast'>('google');
 
   // Sync view with activeView prop
   useEffect(() => {
@@ -75,28 +75,24 @@ export function Sidebar({
   }, [activeView]);
 
   const models = [
-    // Google
+    // Google Group
     { id: 'gemini-2.5-pro', icon: Sparkles, name: 'Gemini 2.5 Pro', provider: 'google' },
     { id: 'gemini-2.5-flash', icon: Sparkles, name: 'Gemini 2.5 Flash', provider: 'google' },
     { id: 'gemma-3-27b-it', icon: Sparkles, name: 'Gemma 3 27B', provider: 'google' },
-    
-    // Mistral
+
+    // Mistral Group
     { id: 'mistral-large-latest', icon: Cloud, name: 'Mistral Large', provider: 'mistral' },
     { id: 'mistral-medium-latest', icon: Cloud, name: 'Mistral Medium', provider: 'mistral' },
     { id: 'mistral-small-latest', icon: Cloud, name: 'Mistral Small', provider: 'mistral' },
     { id: 'codestral-latest', icon: Terminal, name: 'Codestral', provider: 'mistral' },
-    
-    // Groq
-    { id: 'llama-3.3-70b-versatile', icon: Zap, name: 'Llama 3.3 70B', provider: 'others' },
-    { id: 'openai/gpt-oss-20b', icon: Zap, name: 'GPT-OSS 20B', provider: 'others' },
-    
-    // Cerebras
-    { id: 'gpt-oss-120b', icon: Chip, name: 'GPT-OSS 120B', provider: 'others' },
-    { id: 'qwen-3-235b-a22b-instruct-2507', icon: Chip, name: 'Qwen 3 235B', provider: 'others' },
-    { id: 'zai-glm-4.6', icon: Chip, name: 'ZAI GLM 4.6', provider: 'others' },
-    
-    // Zhipu
-    { id: 'glm-4.5-flash', icon: Brain, name: 'Zhipu GLM 4.5', provider: 'others' },
+
+    // Fast/Other Group
+    { id: 'llama-3.3-70b-versatile', icon: Zap, name: 'Groq Llama 3.3', provider: 'fast' },
+    { id: 'openai/gpt-oss-20b', icon: Zap, name: 'Groq GPT-OSS 20B', provider: 'fast' },
+    { id: 'gpt-oss-120b', icon: Cpu, name: 'Cerebras 120B', provider: 'fast' },
+    { id: 'qwen-3-235b-a22b-instruct-2507', icon: Cpu, name: 'Cerebras Qwen 3', provider: 'fast' },
+    { id: 'zai-glm-4.6', icon: Cpu, name: 'Cerebras GLM 4.6', provider: 'fast' },
+    { id: 'glm-4.5-flash', icon: Brain, name: 'Zhipu GLM 4.5', provider: 'fast' },
   ];
 
   const sortedConversations = useMemo(() => {
@@ -234,8 +230,8 @@ export function Sidebar({
                   Mistral
                 </button>
                 <button 
-                  onClick={() => setModelGroup('others')} 
-                  className={`flex-1 text-[10px] font-bold py-1 rounded ${modelGroup === 'others' ? 'bg-[var(--color-bg)] text-white shadow-sm' : 'text-gray-400 hover:text-white'}`}
+                  onClick={() => setModelGroup('fast')} 
+                  className={`flex-1 text-[10px] font-bold py-1 rounded ${modelGroup === 'fast' ? 'bg-[var(--color-bg)] text-white shadow-sm' : 'text-gray-400 hover:text-white'}`}
                 >
                   Fast/Other
                 </button>
