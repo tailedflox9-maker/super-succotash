@@ -19,10 +19,10 @@ const apiInfo = {
 };
 
 const tutorModes = [
-    { id: 'standard', name: 'Standard Tutor', description: 'Neutral, explains clearly, step-by-step.', emoji: '📘' },
-    { id: 'exam', name: 'Exam Coach', description: 'Focus on practice questions & quick answers.', emoji: '🎓' },
-    { id: 'mentor', name: 'Friendly Mentor', description: 'Casual, motivating, makes analogies.', emoji: '🧑‍🏫' },
-    { id: 'creative', name: 'Creative Guide', description: 'Helps with essays, storytelling, ideas.', emoji: '✍️' },
+  { id: 'standard', name: 'Standard Tutor', description: 'Neutral, explains clearly, step-by-step.', emoji: '📘' },
+  { id: 'exam', name: 'Exam Coach', description: 'Focus on practice questions & quick answers.', emoji: '🎓' },
+  { id: 'mentor', name: 'Friendly Mentor', description: 'Casual, motivating, makes analogies.', emoji: '🧑‍🏫' },
+  { id: 'creative', name: 'Creative Guide', description: 'Helps with essays, storytelling, ideas.', emoji: '✍️' },
 ];
 
 type ActiveTab = 'general' | 'keys' | 'data';
@@ -44,7 +44,7 @@ export function SettingsModal({ isOpen, onClose, settings, onSaveSettings }: Set
   const handleSave = () => {
     onSaveSettings(localSettings);
   };
-  
+
   const handleTutorModeChange = (modeId: TutorMode) => {
     setLocalSettings(prev => ({ ...prev, selectedTutorMode: modeId }));
   };
@@ -106,9 +106,8 @@ export function SettingsModal({ isOpen, onClose, settings, onSaveSettings }: Set
   const TabButton = ({ id, label, Icon }: { id: ActiveTab; label: string; Icon: React.ElementType }) => (
     <button
       onClick={() => setActiveTab(id)}
-      className={`flex-1 flex items-center justify-center gap-2 p-3 text-sm font-semibold transition-colors rounded-lg ${
-        activeTab === id ? 'bg-[var(--color-card)] text-[var(--color-text-primary)]' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-card)] hover:text-[var(--color-text-primary)]'
-      }`}
+      className={`flex-1 flex items-center justify-center gap-2 p-3 text-sm font-semibold transition-colors rounded-lg ${activeTab === id ? 'bg-[var(--color-card)] text-[var(--color-text-primary)]' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-card)] hover:text-[var(--color-text-primary)]'
+        }`}
     >
       <Icon className="w-4 h-4" />
       {label}
@@ -121,7 +120,7 @@ export function SettingsModal({ isOpen, onClose, settings, onSaveSettings }: Set
         className="fixed inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative w-full max-w-lg bg-[var(--color-sidebar)] border border-[var(--color-border)] rounded-lg shadow-2xl flex flex-col animate-fade-in-up">
+      <div className="settings-modal-content relative w-full max-w-lg bg-[var(--color-sidebar)] border border-[var(--color-border)] rounded-lg shadow-2xl flex flex-col animate-fade-in-up">
         {/* Header */}
         <div className="p-6 flex items-center justify-between border-b border-[var(--color-border)]">
           <div className="flex items-center gap-3">
@@ -139,7 +138,7 @@ export function SettingsModal({ isOpen, onClose, settings, onSaveSettings }: Set
           <TabButton id="keys" label="API Keys" Icon={Shield} />
           <TabButton id="data" label="Data" Icon={Database} />
         </div>
-        
+
         {/* Content */}
         <div className="p-6 min-h-[24rem] max-h-[60vh] overflow-y-auto">
           {activeTab === 'general' && (
@@ -207,12 +206,12 @@ export function SettingsModal({ isOpen, onClose, settings, onSaveSettings }: Set
               <div>
                 <h3 className="font-semibold mb-2">Import / Export</h3>
                 <div className="grid grid-cols-2 gap-2">
-                  <button onClick={handleExportData} className="flex items-center justify-center gap-2 p-3 border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-card)] transition-colors"> <Download className="w-4 h-4"/> Export</button>
-                  <button onClick={triggerFileInput} className="flex items-center justify-center gap-2 p-3 border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-card)] transition-colors"> <Upload className="w-4 h-4"/> Import</button>
-                  <input type="file" ref={fileInputRef} onChange={handleImportData} accept=".json" className="hidden"/>
+                  <button onClick={handleExportData} className="flex items-center justify-center gap-2 p-3 border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-card)] transition-colors"> <Download className="w-4 h-4" /> Export</button>
+                  <button onClick={triggerFileInput} className="flex items-center justify-center gap-2 p-3 border border-[var(--color-border)] rounded-lg hover:bg-[var(--color-card)] transition-colors"> <Upload className="w-4 h-4" /> Import</button>
+                  <input type="file" ref={fileInputRef} onChange={handleImportData} accept=".json" className="hidden" />
                 </div>
               </div>
-               <div>
+              <div>
                 <h3 className="font-semibold mb-2 text-red-400">Danger Zone</h3>
                 <button onClick={handleClearData} className="w-full flex items-center justify-center gap-2 p-3 border border-red-500/30 bg-red-900/20 text-red-400 rounded-lg hover:bg-red-900/40 hover:text-red-300 transition-colors">
                   <Trash2 className="w-4 h-4" />
