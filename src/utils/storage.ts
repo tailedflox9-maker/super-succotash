@@ -27,7 +27,7 @@ export const storageUtils = {
     try {
       const stored = localStorage.getItem(CONVERSATIONS_KEY);
       if (!stored) return [];
-      
+
       const parsed = JSON.parse(stored);
       if (!Array.isArray(parsed)) {
         console.error('Invalid conversations format');
@@ -71,7 +71,7 @@ export const storageUtils = {
     try {
       const stored = localStorage.getItem(SETTINGS_KEY);
       if (!stored) return defaultSettings;
-      
+
       const parsed = JSON.parse(stored);
       // Ensure all required fields exist
       return {
@@ -102,7 +102,7 @@ export const storageUtils = {
     try {
       const stored = localStorage.getItem(NOTES_KEY);
       if (!stored) return [];
-      
+
       const parsed = JSON.parse(stored);
       if (!Array.isArray(parsed)) {
         console.error('Invalid notes format');
@@ -140,7 +140,7 @@ export const storageUtils = {
     try {
       const stored = localStorage.getItem(FLOWCHARTS_KEY);
       if (!stored) return [];
-      
+
       const parsed = JSON.parse(stored);
       if (!Array.isArray(parsed)) {
         console.error('Invalid flowcharts format');
@@ -174,12 +174,59 @@ export const storageUtils = {
     }
   },
 
+  getJourneys(): any[] {
+    try {
+      const stored = localStorage.getItem('ai-tutor-journeys');
+      if (!stored) return [];
+
+      const parsed = JSON.parse(stored);
+      if (!Array.isArray(parsed)) {
+        console.error('Invalid journeys format');
+        return [];
+      }
+
+      return parsed.map((journey: any) => ({
+        ...journey,
+        createdAt: parseDate(journey.createdAt),
+        updatedAt: parseDate(journey.updatedAt),
+        progress: {
+          ...journey.progress,
+          completedAt: journey.progress?.completedAt ? parseDate(journey.progress.completedAt) : undefined
+        },
+        parts: Array.isArray(journey.parts) ? journey.parts.map((part: any) => ({
+          ...part,
+          completedAt: part.completedAt ? parseDate(part.completedAt) : undefined
+        })) : []
+      }));
+    } catch (error) {
+      console.error('Error loading journeys:', error);
+      localStorage.removeItem('ai-tutor-journeys');
+      return [];
+    }
+  },
+
+  saveJourneys(journeys: any[]): void {
+    try {
+      if (!Array.isArray(journeys)) {
+        console.error('Invalid journeys data');
+        return;
+      }
+      localStorage.setItem('ai-tutor-journeys', JSON.stringify(journeys));
+    } catch (error) {
+      console.error('Error saving journeys:', error);
+      if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+        alert('Storage quota exceeded. Please delete some journeys.');
+      }
+    }
+  },
+
   clearAllData(): void {
     try {
       localStorage.removeItem(CONVERSATIONS_KEY);
       localStorage.removeItem(SETTINGS_KEY);
       localStorage.removeItem(NOTES_KEY);
       localStorage.removeItem(FLOWCHARTS_KEY);
+      localStorage.removeItem('ai-tutor-journeys');
     } catch (error) {
       console.error('Error clearing data:', error);
     }
