@@ -544,6 +544,98 @@ class AiService {
       throw error;
     }
   }
+
+  /**
+   * Generate a concept journey for interactive learning
+   * @param topic The topic to create a journey for
+   * @returns Promise resolving to ConceptJourney structure
+   */
+  public async generateConceptJourney(topic: string): Promise<any> {
+    const systemPrompt = `You are an expert educational content creator. Generate ONLY valid JSON without any markdown formatting or code blocks.`;
+
+    const prompt = `Create an interactive learning journey about: "${topic}"
+
+Requirements:
+1. Break the topic into exactly 5 engaging parts
+2. Each part should explain ONE core concept (200-300 words)
+3. Use analogies, examples, and clear explanations
+4. End each part with 2 quiz questions (multiple choice, 4 options each)
+5. Make it engaging and easy to understand
+
+Return ONLY this JSON structure (no markdown, no code blocks):
+{
+  "topic": "${topic}",
+  "parts": [
+    {
+      "title": "Part title (5-8 words)",
+      "content": "Detailed explanation with **markdown** formatting",
+      "quiz": [
+        {
+          "question": "Question text?",
+          "options": ["Option A", "Option B", "Option C", "Option D"],
+          "correctAnswer": 0,
+          "explanation": "Why this answer is correct"
+        }
+      ]
+    }
+  ]
+}`;
+
+    try {
+      // Collect full response
+      let fullResponse = '';
+      for await (const chunk of this.generateStreamingResponse([
+        { role: 'user', content: prompt }
+      ])) {
+        fullResponse += chunk;
+      }
+
+      // Extract JSON from response (handle markdown code blocks if present)
+      const jsonMatch = fullResponse.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('No valid JSON found in response');
+      }
+
+      const parsed = JSON.parse(jsonMatch[0]);
+
+      // Transform to ConceptJourney format
+      return {
+        id: generateId(),
+        topic: parsed.topic || topic,
+        conversationId: '',
+        parts: parsed.parts.map((p: any, i: number) => ({
+          id: generateId(),
+          order: i + 1,
+          title: p.title,
+          content: p.content,
+          interactiveElements: p.quiz && p.quiz.length > 0 ? [{
+            type: 'quiz' as const,
+            data: {
+              questions: p.quiz.map((q: any) => ({
+                id: generateId(),
+                question: q.question,
+                options: q.options,
+                correctAnswer: q.correctAnswer,
+                explanation: q.explanation
+              }))
+            }
+          }] : [],
+          completed: false
+        })),
+        progress: {
+          currentPartIndex: 0,
+          totalParts: parsed.parts.length,
+          percentage: 0,
+          timeSpent: 0
+        },
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+    } catch (error) {
+      console.error('Failed to generate journey:', error);
+      throw new Error('Failed to generate learning journey. Please try again.');
+    }
+  }
 }
 
 export const aiService = new AiService();
