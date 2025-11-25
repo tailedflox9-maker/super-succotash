@@ -880,6 +880,7 @@ function App() {
               onGenerateFlowchart={handleGenerateFlowchart}
               onEditMessage={handleEditMessage}
               onRegenerateResponse={handleRegenerateResponse}
+              onStartJourney={handleStartJourney}
             />
           </>
         ) : activeView === 'note' ? (
