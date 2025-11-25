@@ -39,37 +39,38 @@
   }
 
   /* --- ANIMATED STARFIELD BACKGROUND --- */
-  /* Starfield background with two layers */
+  /* Starfield background with bright glowing stars */
   html {
     background:
-      radial-gradient(2px 2px at 20% 30%, white, transparent),
-      radial-gradient(2px 2px at 60% 70%, white, transparent),
-      radial-gradient(1px 1px at 50% 50%, white, transparent),
-      radial-gradient(1px 1px at 80% 10%, white, transparent),
-      radial-gradient(2px 2px at 90% 60%, white, transparent),
-      radial-gradient(1px 1px at 33% 80%, white, transparent),
-      radial-gradient(2px 2px at 15% 90%, white, transparent),
-      radial-gradient(1px 1px at 70% 40%, white, transparent),
-      radial-gradient(1px 1px at 25% 15%, white, transparent),
-      radial-gradient(2px 2px at 45% 95%, white, transparent),
-      radial-gradient(1px 1px at 85% 85%, white, transparent),
-      radial-gradient(2px 2px at 10% 50%, white, transparent),
-      radial-gradient(1px 1px at 95% 25%, white, transparent),
-      radial-gradient(1px 1px at 40% 60%, white, transparent),
-      radial-gradient(2px 2px at 65% 20%, white, transparent),
-      /* Second layer - smaller stars */
-      radial-gradient(1px 1px at 22% 45%, white, transparent),
-      radial-gradient(1px 1px at 55% 85%, white, transparent),
-      radial-gradient(1px 1px at 75% 55%, white, transparent),
-      radial-gradient(1px 1px at 35% 25%, white, transparent),
-      radial-gradient(1px 1px at 88% 75%, white, transparent),
-      radial-gradient(1px 1px at 12% 65%, white, transparent),
-      radial-gradient(1px 1px at 48% 35%, white, transparent),
-      radial-gradient(1px 1px at 92% 45%, white, transparent),
-      radial-gradient(1px 1px at 30% 75%, white, transparent),
-      radial-gradient(1px 1px at 68% 15%, white, transparent),
+      radial-gradient(circle, white 0%, white 40%, transparent 70%),
+      radial-gradient(circle at 20% 30%, white 0%, transparent 50%) 0 0/3px 3px,
+      radial-gradient(circle at 60% 70%, white 0%, transparent 50%) 0 0/3px 3px,
+      radial-gradient(circle at 50% 50%, white 0%, transparent 50%) 0 0/2px 2px,
+      radial-gradient(circle at 80% 10%, white 0%, transparent 50%) 0 0/2px 2px,
+      radial-gradient(circle at 90% 60%, white 0%, transparent 50%) 0 0/3px 3px,
+      radial-gradient(circle at 33% 80%, white 0%, transparent 50%) 0 0/2px 2px,
+      radial-gradient(circle at 15% 90%, white 0%, transparent 50%) 0 0/3px 3px,
+      radial-gradient(circle at 70% 40%, white 0%, transparent 50%) 0 0/2px 2px,
+      radial-gradient(circle at 25% 15%, white 0%, transparent 50%) 0 0/2px 2px,
+      radial-gradient(circle at 45% 95%, white 0%, transparent 50%) 0 0/3px 3px,
+      radial-gradient(circle at 85% 85%, white 0%, transparent 50%) 0 0/2px 2px,
+      radial-gradient(circle at 10% 50%, white 0%, transparent 50%) 0 0/3px 3px,
+      radial-gradient(circle at 95% 25%, white 0%, transparent 50%) 0 0/2px 2px,
+      radial-gradient(circle at 40% 60%, white 0%, transparent 50%) 0 0/2px 2px,
+      radial-gradient(circle at 65% 20%, white 0%, transparent 50%) 0 0/3px 3px,
+      /* Second layer - smaller bright stars */
+      radial-gradient(circle at 22% 45%, white 0%, transparent 50%) 0 0/2px 2px,
+      radial-gradient(circle at 55% 85%, white 0%, transparent 50%) 0 0/2px 2px,
+      radial-gradient(circle at 75% 55%, white 0%, transparent 50%) 0 0/2px 2px,
+      radial-gradient(circle at 35% 25%, white 0%, transparent 50%) 0 0/2px 2px,
+      radial-gradient(circle at 88% 75%, white 0%, transparent 50%) 0 0/2px 2px,
+      radial-gradient(circle at 12% 65%, white 0%, transparent 50%) 0 0/2px 2px,
+      radial-gradient(circle at 48% 35%, white 0%, transparent 50%) 0 0/2px 2px,
+      radial-gradient(circle at 92% 45%, white 0%, transparent 50%) 0 0/2px 2px,
+      radial-gradient(circle at 30% 75%, white 0%, transparent 50%) 0 0/2px 2px,
+      radial-gradient(circle at 68% 15%, white 0%, transparent 50%) 0 0/2px 2px,
       #0a0a0a;
-    background-size: 200% 200%;
+    background-size: 100% 100%;
     background-attachment: fixed;
   }
 
