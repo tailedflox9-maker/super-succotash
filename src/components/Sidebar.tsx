@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import {
   Plus, MessageSquare, Settings, Trash2, X, ChevronLeft, ChevronRight,
   Sparkles, Brain, Cloud, Terminal, Search, Pin, Edit, Book, GitBranch,
-  Zap, Cpu
+  Zap, Cpu, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { Conversation, Note, Flowchart, AIModel } from '../types';
 
@@ -61,7 +61,9 @@ export function Sidebar({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
   const [view, setView] = useState<'chats' | 'notes' | 'flowcharts'>('chats');
-  const [modelGroup, setModelGroup] = useState<'google' | 'mistral' | 'fast'>('google');
+  
+  // State to toggle the extra models
+  const [showAllModels, setShowAllModels] = useState(false);
 
   // Sync view with activeView prop
   useEffect(() => {
@@ -74,26 +76,28 @@ export function Sidebar({
     }
   }, [activeView]);
 
-  const models = [
-    // Google Group
-    { id: 'gemini-2.5-pro', icon: Sparkles, name: 'Gemini 2.5 Pro', provider: 'google' },
-    { id: 'gemini-2.5-flash', icon: Sparkles, name: 'Gemini 2.5 Flash', provider: 'google' },
-    { id: 'gemma-3-27b-it', icon: Sparkles, name: 'Gemma 3 27B', provider: 'google' },
+  // Full list of models
+  const allModels = [
+    // --- The "Big 4" (Default View) ---
+    { id: 'gemini-2.5-flash', icon: Sparkles, name: 'Gemini 2.5 Flash' },
+    { id: 'mistral-small-latest', icon: Cloud, name: 'Mistral Small' },
+    { id: 'llama-3.3-70b-versatile', icon: Zap, name: 'Groq Llama 3.3' },
+    { id: 'gpt-oss-120b', icon: Cpu, name: 'Cerebras 120B' },
 
-    // Mistral Group
-    { id: 'mistral-large-latest', icon: Cloud, name: 'Mistral Large', provider: 'mistral' },
-    { id: 'mistral-medium-latest', icon: Cloud, name: 'Mistral Medium', provider: 'mistral' },
-    { id: 'mistral-small-latest', icon: Cloud, name: 'Mistral Small', provider: 'mistral' },
-    { id: 'codestral-latest', icon: Terminal, name: 'Codestral', provider: 'mistral' },
-
-    // Fast/Other Group
-    { id: 'llama-3.3-70b-versatile', icon: Zap, name: 'Groq Llama 3.3', provider: 'fast' },
-    { id: 'openai/gpt-oss-20b', icon: Zap, name: 'Groq GPT-OSS 20B', provider: 'fast' },
-    { id: 'gpt-oss-120b', icon: Cpu, name: 'Cerebras 120B', provider: 'fast' },
-    { id: 'qwen-3-235b-a22b-instruct-2507', icon: Cpu, name: 'Cerebras Qwen 3', provider: 'fast' },
-    { id: 'zai-glm-4.6', icon: Cpu, name: 'Cerebras GLM 4.6', provider: 'fast' },
-    { id: 'glm-4.5-flash', icon: Brain, name: 'Zhipu GLM 4.5', provider: 'fast' },
+    // --- The "More" list (Hidden by default) ---
+    { id: 'gemini-2.5-pro', icon: Sparkles, name: 'Gemini 2.5 Pro' },
+    { id: 'gemma-3-27b-it', icon: Sparkles, name: 'Gemma 3 27B' },
+    { id: 'mistral-large-latest', icon: Cloud, name: 'Mistral Large' },
+    { id: 'mistral-medium-latest', icon: Cloud, name: 'Mistral Medium' },
+    { id: 'codestral-latest', icon: Terminal, name: 'Codestral' },
+    { id: 'openai/gpt-oss-20b', icon: Zap, name: 'Groq GPT 20B' },
+    { id: 'qwen-3-235b-a22b-instruct-2507', icon: Cpu, name: 'Cerebras Qwen 3' },
+    { id: 'zai-glm-4.6', icon: Cpu, name: 'Cerebras GLM 4.6' },
+    { id: 'glm-4.5-flash', icon: Brain, name: 'Zhipu GLM 4.5' },
   ];
+
+  // Logic to determine which models to render
+  const visibleModels = showAllModels ? allModels : allModels.slice(0, 4);
 
   const sortedConversations = useMemo(() => {
     return [...conversations].sort((a, b) => {
@@ -212,60 +216,58 @@ export function Sidebar({
         </button>
       </div>
 
-      {/* Model Selector */}
+      {/* Model Selector - Updated to 4 + More */}
       {view === 'chats' && (
         <div className="p-2 border-b border-[var(--color-border)]">
-          {!isFolded && (
-             <div className="flex gap-1 mb-2 bg-[var(--color-card)] p-1 rounded-lg">
-                <button 
-                  onClick={() => setModelGroup('google')} 
-                  className={`flex-1 text-[10px] font-bold py-1 rounded ${modelGroup === 'google' ? 'bg-[var(--color-bg)] text-white shadow-sm' : 'text-gray-400 hover:text-white'}`}
-                >
-                  Google
-                </button>
-                <button 
-                  onClick={() => setModelGroup('mistral')} 
-                  className={`flex-1 text-[10px] font-bold py-1 rounded ${modelGroup === 'mistral' ? 'bg-[var(--color-bg)] text-white shadow-sm' : 'text-gray-400 hover:text-white'}`}
-                >
-                  Mistral
-                </button>
-                <button 
-                  onClick={() => setModelGroup('fast')} 
-                  className={`flex-1 text-[10px] font-bold py-1 rounded ${modelGroup === 'fast' ? 'bg-[var(--color-bg)] text-white shadow-sm' : 'text-gray-400 hover:text-white'}`}
-                >
-                  Fast/Other
-                </button>
-             </div>
-          )}
-
           {isFolded ? (
              <div className="flex justify-center">
                 <button
                    className="p-2 bg-[var(--color-card)] rounded-lg text-[var(--color-text-primary)]"
-                   title={models.find(m => m.id === settings.selectedModel)?.name}
+                   title={allModels.find(m => m.id === settings.selectedModel)?.name}
                 >
-                   {React.createElement(models.find(m => m.id === settings.selectedModel)?.icon || Sparkles, { className: "w-5 h-5" })}
+                   {React.createElement(allModels.find(m => m.id === settings.selectedModel)?.icon || Sparkles, { className: "w-5 h-5" })}
                 </button>
              </div>
           ) : (
-            <div className="space-y-2 max-h-32 overflow-y-auto pr-1 scrollbar-thin">
-              <div className="grid grid-cols-1 gap-1">
-                {models.filter(m => m.provider === modelGroup).map(model => (
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider px-1">
+                AI Model
+              </p>
+              
+              {/* Grid for Primary Models */}
+              <div className="grid grid-cols-2 gap-2">
+                {visibleModels.map(model => (
                   <button
                     key={model.id}
                     onClick={() => onModelChange(model.id as AIModel)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200 border text-left ${
+                    className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all duration-200 border transform hover:scale-105 active:scale-100 ${
                       settings.selectedModel === model.id
-                        ? 'bg-[var(--color-card)] border-[var(--color-border)] text-white'
+                        ? 'bg-[var(--color-card)] border-[var(--color-border)] text-white scale-105'
                         : 'bg-transparent border-transparent hover:bg-[var(--color-card)] text-[var(--color-text-secondary)] hover:text-white'
                     }`}
                     title={model.name}
                   >
-                    <model.icon className="w-3.5 h-3.5 flex-shrink-0" />
-                    <span className="text-xs font-medium truncate">{model.name}</span>
+                    <model.icon className="w-4 h-4" />
+                    <span className="text-xs font-semibold truncate w-full text-center">{model.name.split(' ').slice(0, 2).join(' ')}</span>
                   </button>
                 ))}
               </div>
+
+              {/* Show More Button */}
+              <button
+                onClick={() => setShowAllModels(!showAllModels)}
+                className="w-full flex items-center justify-center gap-1 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-card)] py-1.5 rounded transition-colors"
+              >
+                {showAllModels ? (
+                  <>
+                    <ChevronUp className="w-3 h-3" /> Show less
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="w-3 h-3" /> Show more models ({allModels.length - 4})
+                  </>
+                )}
+              </button>
             </div>
           )}
         </div>
