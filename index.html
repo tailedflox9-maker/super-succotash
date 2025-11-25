@@ -22,6 +22,15 @@
     
     <title>AI Tutor Chat Application</title>
     
+    <!-- Theme Initialization (prevents flash) -->
+    <script>
+      (function() {
+        const savedTheme = localStorage.getItem('ai-tutor-theme');
+        const theme = (savedTheme === 'light' || savedTheme === 'dark') ? savedTheme : 'dark';
+        document.documentElement.classList.add(theme);
+      })();
+    </script>
+    
     <!-- Service Worker Registration -->
     <script>
       if ('serviceWorker' in navigator) {
