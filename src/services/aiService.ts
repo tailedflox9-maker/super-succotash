@@ -407,18 +407,43 @@ class AiService {
     }
   }
 
-  // Quiz generation logic (kept robust)
+  // Quiz generation logic (FIXED & ROBUST)
   public async generateQuiz(conversation: Conversation): Promise<StudySession> {
     if (!this.settings.googleApiKey) {
       throw new Error('Google API key must be configured to generate quizzes.');
     }
-    // ... (rest of quiz logic remains the same as previous hard-fix) ...
-    // Note: Re-pasting the robust logic here for completeness in context
+
+    if (!conversation.messages || conversation.messages.length < 2) {
+      throw new Error('Conversation must have at least 2 messages to generate a quiz.');
+    }
+
     const conversationText = conversation.messages
       .map(m => `${m.role === 'user' ? 'Q:' : 'A:'} ${m.content}`)
       .join('\n\n');
 
-    const prompt = `Based on the following conversation, create a multiple-choice quiz with 5 questions... (Strict JSON format)...`;
+    const prompt = `Based on the following conversation, create a multiple-choice quiz with 5 questions to test understanding of the key concepts.
+
+    STRICT JSON OUTPUT FORMAT REQUIRED:
+    {
+      "questions": [
+        {
+          "question": "Question text here",
+          "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
+          "answer": "Option 2",
+          "explanation": "Explanation here"
+        }
+      ]
+    }
+    
+    RULES:
+    1. "questions" must be an array.
+    2. "options" must be an array of exactly 4 strings.
+    3. "answer" must be a string that MATCHES EXACTLY one of the strings in "options".
+    4. "explanation" must be a string.
+    5. No markdown code blocks, just raw JSON.
+
+    CONVERSATION:
+    ${conversationText.slice(0, 6000)}`;
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
@@ -430,7 +455,7 @@ class AiService {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{ role: 'user', parts: [{ text: prompt + `\n\n${conversationText.slice(0, 6000)}` }] }],
+            contents: [{ role: 'user', parts: [{ text: prompt }] }], 
             generationConfig: { responseMimeType: "application/json", temperature: 0.3 } 
           }),
           signal: controller.signal,
@@ -442,15 +467,67 @@ class AiService {
       
       const data = await response.json();
       const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      const parsed = JSON.parse(textResponse);
       
-      const questions: QuizQuestion[] = parsed.questions.map((q: any) => ({
-        id: generateId(),
-        question: q.question,
-        options: q.options,
-        correctAnswer: Math.max(0, q.options.findIndex((opt: string) => String(opt).trim() === String(q.answer).trim()) > -1 ? q.options.findIndex((opt: string) => String(opt).trim() === String(q.answer).trim()) : 0),
-        explanation: q.explanation || 'No explanation provided.',
-      }));
+      if (!textResponse) throw new Error('No content returned from AI');
+
+      let parsed;
+      try {
+        parsed = JSON.parse(textResponse);
+      } catch (e) {
+        console.error("JSON Parse Error:", e);
+        throw new Error("Failed to parse AI response as JSON");
+      }
+      
+      // FIXED: Handle different possible valid JSON structures safely
+      let questionsArray: any[] = [];
+      if (Array.isArray(parsed)) {
+        questionsArray = parsed;
+      } else if (parsed && parsed.questions && Array.isArray(parsed.questions)) {
+        questionsArray = parsed.questions;
+      } else if (parsed && parsed.quiz && Array.isArray(parsed.quiz)) {
+        questionsArray = parsed.quiz;
+      } else {
+        console.error("Invalid Quiz Structure:", parsed);
+        throw new Error('AI returned invalid quiz structure (missing questions array)');
+      }
+
+      if (questionsArray.length === 0) {
+        throw new Error('No questions generated.');
+      }
+
+      const questions: QuizQuestion[] = questionsArray.map((q: any) => {
+        // Helper to find answer index safely
+        let correctIndex = -1;
+        const options = Array.isArray(q.options) ? q.options : ["Yes", "No", "Maybe", "Unsure"];
+        
+        if (q.answer) {
+            // Try exact match
+            correctIndex = options.indexOf(q.answer);
+            
+            // Try string match (trimmed)
+            if (correctIndex === -1) {
+                correctIndex = options.findIndex((opt: string) => 
+                    String(opt).trim().toLowerCase() === String(q.answer).trim().toLowerCase()
+                );
+            }
+            
+            // Try letter matching (A, B, C, D)
+            if (correctIndex === -1 && /^[A-D]$/i.test(q.answer)) {
+                correctIndex = q.answer.toUpperCase().charCodeAt(0) - 65;
+            }
+        }
+
+        // Fallback to 0 if still not found (prevent crash)
+        if (correctIndex === -1) correctIndex = 0;
+
+        return {
+            id: generateId(),
+            question: q.question || "Untitled Question",
+            options: options,
+            correctAnswer: correctIndex,
+            explanation: q.explanation || 'No explanation provided.',
+        };
+      });
 
       return {
         id: generateId(),
