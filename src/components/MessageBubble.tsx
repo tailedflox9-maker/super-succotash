@@ -292,7 +292,7 @@ export function MessageBubble({
         </div>
       )}
 
-      <div className="message-bubble relative group bg-[var(--color-card)] p-3 sm:p-4 rounded-xl min-h-[3rem] flex flex-col">
+      <div className="message-bubble relative group p-3 sm:p-4 rounded-xl min-h-[3rem] flex flex-col">
         {!isUser && displayModel && (
           <div className="text-xs text-[var(--color-text-secondary)] mb-2 font-medium tracking-wide">
             {displayModel}
