@@ -39,7 +39,7 @@
   }
 
   /* --- ANIMATED STARFIELD BACKGROUND --- */
-  /* Bright starfield using pseudo-elements */
+  /* Layer 1: Larger, brighter stars */
   html::before {
     content: '';
     position: fixed;
@@ -49,41 +49,53 @@
     height: 100%;
     z-index: -1;
     pointer-events: none;
-    background: #0a0a0a;
-    box-shadow:
-      /* Large bright stars */
-      20vw 30vh 2px 1px white,
-      60vw 70vh 2px 1px white,
-      90vw 60vh 2px 1px white,
-      15vw 90vh 2px 1px white,
-      45vw 95vh 2px 1px white,
-      10vw 50vh 2px 1px white,
-      65vw 20vh 2px 1px white,
-      /* Medium stars */
-      50vw 50vh 1px 1px white,
-      80vw 10vh 1px 1px white,
-      33vw 80vh 1px 1px white,
-      70vw 40vh 1px 1px white,
-      25vw 15vh 1px 1px white,
-      85vw 85vh 1px 1px white,
-      95vw 25vh 1px 1px white,
-      40vw 60vh 1px 1px white,
-      /* Small stars */
-      22vw 45vh 1px 0px rgba(255, 255, 255, 0.8),
-      55vw 85vh 1px 0px rgba(255, 255, 255, 0.8),
-      75vw 55vh 1px 0px rgba(255, 255, 255, 0.8),
-      35vw 25vh 1px 0px rgba(255, 255, 255, 0.8),
-      88vw 75vh 1px 0px rgba(255, 255, 255, 0.8),
-      12vw 65vh 1px 0px rgba(255, 255, 255, 0.8),
-      48vw 35vh 1px 0px rgba(255, 255, 255, 0.8),
-      92vw 45vh 1px 0px rgba(255, 255, 255, 0.8),
-      30vw 75vh 1px 0px rgba(255, 255, 255, 0.8),
-      68vw 15vh 1px 0px rgba(255, 255, 255, 0.8),
-      42vw 82vh 1px 0px rgba(255, 255, 255, 0.8),
-      78vw 38vh 1px 0px rgba(255, 255, 255, 0.8),
-      18vw 58vh 1px 0px rgba(255, 255, 255, 0.8),
-      62vw 28vh 1px 0px rgba(255, 255, 255, 0.8),
-      5vw 95vh 1px 0px rgba(255, 255, 255, 0.8);
+    background-color: #050505;
+
+    background-image:
+      radial-gradient(2px 2px at 20% 30%, white, transparent),
+      radial-gradient(2px 2px at 60% 70%, white, transparent),
+      radial-gradient(1px 1px at 50% 50%, white, transparent),
+      radial-gradient(1px 1px at 80% 10%, white, transparent),
+      radial-gradient(2px 2px at 90% 60%, white, transparent),
+      radial-gradient(1px 1px at 33% 80%, white, transparent),
+      radial-gradient(2px 2px at 15% 90%, white, transparent),
+      radial-gradient(1px 1px at 25% 15%, white, transparent),
+      radial-gradient(2px 2px at 75% 40%, white, transparent),
+      radial-gradient(1px 1px at 45% 65%, white, transparent);
+    background-size: 200% 200%;
+    background-position: 0% 0%, 40% 60%, 50% 50%, 80% 10%, 90% 60%, 33% 80%, 15% 90%, 25% 15%, 75% 40%, 45% 65%;
+    background-repeat: repeat;
+    opacity: 0.9;
+  }
+
+  /* Layer 2: Smaller, dimmer stars */
+  html::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    pointer-events: none;
+
+    background-image:
+      radial-gradient(1px 1px at 10% 20%, white, transparent),
+      radial-gradient(1px 1px at 40% 40%, white, transparent),
+      radial-gradient(1px 1px at 70% 30%, white, transparent),
+      radial-gradient(1px 1px at 25% 60%, white, transparent),
+      radial-gradient(1px 1px at 85% 80%, white, transparent),
+      radial-gradient(1px 1px at 45% 90%, white, transparent),
+      radial-gradient(1px 1px at 65% 15%, white, transparent),
+      radial-gradient(1px 1px at 5% 75%, white, transparent),
+      radial-gradient(1px 1px at 55% 25%, white, transparent),
+      radial-gradient(1px 1px at 35% 55%, white, transparent),
+      radial-gradient(1px 1px at 95% 35%, white, transparent),
+      radial-gradient(1px 1px at 15% 45%, white, transparent);
+    background-size: 250% 250%;
+    background-position: 10% 20%, 40% 40%, 70% 30%, 25% 60%, 85% 80%, 45% 90%, 65% 15%, 5% 75%, 55% 25%, 35% 55%, 95% 35%, 15% 45%;
+    background-repeat: repeat;
+    opacity: 0.5;
   }
 
   * {
