@@ -1,7 +1,7 @@
 export type TutorMode = 'standard' | 'exam' | 'mentor' | 'creative';
 
 // Expanded Model IDs
-export type AIModel = 
+export type AIModel =
   // Google
   | 'gemini-2.5-pro'
   | 'gemini-2.5-flash'
@@ -124,3 +124,6 @@ export interface FlowchartViewport {
   y: number;
   zoom: number;
 }
+
+// Journey types (Concept Explorer feature)
+export * from './types/journey';
