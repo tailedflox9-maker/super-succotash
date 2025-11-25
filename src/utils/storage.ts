@@ -9,7 +9,9 @@ const defaultSettings: APISettings = {
   googleApiKey: '',
   zhipuApiKey: '',
   mistralApiKey: '',
-  selectedModel: 'google',
+  groqApiKey: '',     // New
+  cerebrasApiKey: '', // New
+  selectedModel: 'gemini-2.5-flash', // Updated default
   selectedTutorMode: 'standard',
 };
 
@@ -76,7 +78,9 @@ export const storageUtils = {
         googleApiKey: parsed.googleApiKey || '',
         zhipuApiKey: parsed.zhipuApiKey || '',
         mistralApiKey: parsed.mistralApiKey || '',
-        selectedModel: parsed.selectedModel || 'google',
+        groqApiKey: parsed.groqApiKey || '',         // New
+        cerebrasApiKey: parsed.cerebrasApiKey || '', // New
+        selectedModel: parsed.selectedModel || 'gemini-2.5-flash',
         selectedTutorMode: parsed.selectedTutorMode || 'standard',
       };
     } catch (error) {
