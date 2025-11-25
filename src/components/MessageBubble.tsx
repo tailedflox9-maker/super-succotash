@@ -14,18 +14,32 @@ interface MessageBubbleProps {
   onSaveAsNote?: (content: string) => void;
 }
 
-const modelNames = {
-  google: "Gemma",
-  zhipu: "Zhipu",
-  'mistral-small': "Misty",
-  'mistral-codestral': "Cody",
+const modelNames: Record<string, string> = {
+  // Google Models
+  'gemini-2.5-pro': 'Gemini 2.5 Pro',
+  'gemini-2.5-flash': 'Gemini 2.5 Flash',
+  'gemma-3-27b-it': 'Gemma 3 27B',
+  // Mistral Models
+  'mistral-large-latest': 'Mistral Large',
+  'mistral-medium-latest': 'Mistral Medium',
+  'mistral-small-latest': 'Mistral Small',
+  'codestral-latest': 'Codestral',
+  // Zhipu Models
+  'glm-4.5-flash': 'GLM 4.5 Flash',
+  // Groq Models
+  'llama-3.3-70b-versatile': 'Llama 3.3 70B',
+  'openai/gpt-oss-20b': 'GPT OSS 20B',
+  // Cerebras Models
+  'gpt-oss-120b': 'GPT OSS 120B',
+  'qwen-3-235b-a22b-instruct-2507': 'Qwen 3 235B',
+  'zai-glm-4.6': 'ZAI GLM 4.6',
 };
 
 // Memoized code block component to prevent unnecessary re-renders
 const CodeBlock = React.memo(({ language, children }: { language: string; children: string; }) => {
   const [copied, setCopied] = useState(false);
   const codeContent = String(children).replace(/\n$/, '');
-  
+
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(codeContent);
     setCopied(true);
@@ -143,7 +157,7 @@ export function MessageBubble({
   // Memoize display model to prevent unnecessary recalculations
   const displayModel = useMemo(() => {
     if (isUser || !message.model) return undefined;
-    return modelNames[message.model] || modelNames['google'];
+    return modelNames[message.model] || 'AI Assistant';
   }, [isUser, message.model]);
 
   const handleCopy = useCallback(async () => {
@@ -158,7 +172,7 @@ export function MessageBubble({
       console.error('Failed to copy text:', error);
     }
   }, [message.content]);
-  
+
   const handleSaveNote = useCallback(() => {
     if (onSaveAsNote) {
       onSaveAsNote(message.content);
@@ -277,14 +291,14 @@ export function MessageBubble({
           <Sparkles className="w-4 h-4 text-[var(--color-text-secondary)]" />
         </div>
       )}
-      
+
       <div className="message-bubble relative group bg-[var(--color-card)] p-3 sm:p-4 rounded-xl min-h-[3rem] flex flex-col">
         {!isUser && displayModel && (
           <div className="text-xs text-[var(--color-text-secondary)] mb-2 font-medium tracking-wide">
             {displayModel}
           </div>
         )}
-        
+
         {isEditing ? (
           <div className="space-y-3">
             <textarea
@@ -327,7 +341,7 @@ export function MessageBubble({
             {isStreaming && <StreamingIndicator />}
           </div>
         )}
-        
+
         {!isEditing && !isStreaming && message.content.length > 0 && onEditMessage && (
           <div className="absolute -bottom-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
             <ActionButtons
@@ -343,7 +357,7 @@ export function MessageBubble({
           </div>
         )}
       </div>
-      
+
       {isUser && (
         <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-[var(--color-card)] self-start">
           <Smile className="w-4 h-4 text-[var(--color-text-secondary)]" />
