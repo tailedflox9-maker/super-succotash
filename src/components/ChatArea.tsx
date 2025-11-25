@@ -3,23 +3,26 @@
 import React, { useEffect, useRef, useCallback, useMemo } from 'react';
 import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
-import { Conversation, Message } from '../types';
+import type { Conversation, Message } from '../types';
+import { JourneyCard } from './JourneyCard';
+import { isExplorableTopic, extractTopic } from '../services/journeyDetection';
 
 interface ChatAreaProps {
-  conversation: Conversation | undefined;
+  conversation: Conversation | null;
   onSendMessage: (message: string) => void;
   onNewConversation: () => void;
   isLoading: boolean;
   isQuizLoading: boolean;
   isFlowchartLoading: boolean;
-  streamingMessage?: Message | null;
+  streamingMessage: Message | null;
   hasApiKey: boolean;
   onStopGenerating: () => void;
   onSaveAsNote: (content: string) => void;
   onGenerateQuiz: () => void;
   onGenerateFlowchart: () => void;
-  onEditMessage?: (messageId: string, newContent: string) => void;
-  onRegenerateResponse?: (messageId: string) => void;
+  onEditMessage: (messageId: string, newContent: string) => void;
+  onRegenerateResponse: (messageId: string) => void;
+  onStartJourney?: (topic: string) => void;
 }
 
 export function ChatArea({
@@ -37,6 +40,7 @@ export function ChatArea({
   onGenerateFlowchart,
   onEditMessage,
   onRegenerateResponse,
+  onStartJourney,
 }: ChatAreaProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatMessagesRef = useRef<HTMLDivElement>(null);
@@ -64,7 +68,7 @@ export function ChatArea({
       <div className="chat-area">
         <div className="flex-1 flex flex-col items-center justify-center p-8">
           <div className="text-center max-w-2xl mx-auto space-y-8">
-            
+
             {/* Logo */}
             <div className="flex justify-center">
               <div className="w-24 h-24 bg-[var(--color-card)] rounded-2xl flex items-center justify-center p-5 border border-[var(--color-border)]">
@@ -92,12 +96,12 @@ export function ChatArea({
                 <div className="text-2xl mb-2">🎓</div>
                 <div className="text-xs font-medium text-[var(--color-text-primary)]">Expert Tutor</div>
               </div>
-              
+
               <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg p-4 text-center hover:border-[var(--color-text-secondary)] transition-colors">
                 <div className="text-2xl mb-2">💡</div>
                 <div className="text-xs font-medium text-[var(--color-text-primary)]">Smart Quizzes</div>
               </div>
-              
+
               <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg p-4 text-center hover:border-[var(--color-text-secondary)] transition-colors">
                 <div className="text-2xl mb-2">📊</div>
                 <div className="text-xs font-medium text-[var(--color-text-primary)]">Flowcharts</div>
@@ -165,7 +169,7 @@ export function ChatArea({
             // State 2a: The selected conversation is empty.
             <div className="flex items-center justify-center h-full">
               <div className="text-center p-4">
-                 <div className="mb-4 flex justify-center">
+                <div className="mb-4 flex justify-center">
                   <img
                     src="/white-logo.png"
                     alt="AI Tutor Logo"
@@ -181,18 +185,53 @@ export function ChatArea({
               </div>
             </div>
           ) : (
-            // State 2b: The conversation has messages.
-            <div className="space-y-4 sm:space-y-6 py-4 sm:py-6">
-              {allMessages.map((message) => (
+            // State 2b: The conversation has messages
+            <div className="space-y-4 pb-4">
+              {conversation.messages.map((message, index) => {
+                const previousMessage = index > 0 ? conversation.messages[index - 1] : null;
+                const isLastAssistantMessage =
+                  message.role === 'assistant' &&
+                  index === conversation.messages.length - 1;
+
+                // Check if previous user message is explorable
+                const shouldShowJourneyCard =
+                  isLastAssistantMessage &&
+                  previousMessage?.role === 'user' &&
+                  isExplorableTopic(previousMessage.content) &&
+                  onStartJourney;
+
+                return (
+                  <React.Fragment key={message.id}>
+                    <MessageBubble
+                      message={message}
+                      onSaveAsNote={onSaveAsNote}
+                      onEditMessage={onEditMessage}
+                      onRegenerateResponse={
+                        message.role === 'assistant' ? onRegenerateResponse : undefined
+                      }
+                    />
+
+                    {/* Show journey card after AI response if topic is explorable */}
+                    {shouldShowJourneyCard && (
+                      <JourneyCard
+                        topic={extractTopic(previousMessage.content)}
+                        onStart={() => onStartJourney!(extractTopic(previousMessage.content))}
+                        isLoading={isFlowchartLoading}
+                      />
+                    )}
+                  </React.Fragment>
+                );
+              })}
+              {streamingMessage && (
                 <MessageBubble
-                  key={message.id}
-                  message={message}
-                  isStreaming={streamingMessage?.id === message.id}
+                  key={streamingMessage.id}
+                  message={streamingMessage}
+                  isStreaming={true}
                   onSaveAsNote={onSaveAsNote}
                   onEditMessage={onEditMessage}
-                  onRegenerateResponse={onRegenerateResponse}
+                  onRegenerateResponse={undefined}
                 />
-              ))}
+              )}
             </div>
           )}
           <div ref={messagesEndRef} className="h-1 flex-shrink-0" />
