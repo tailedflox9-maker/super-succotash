@@ -1,5 +1,26 @@
 export type TutorMode = 'standard' | 'exam' | 'mentor' | 'creative';
 
+// Expanded Model IDs
+export type AIModel = 
+  // Google
+  | 'gemini-2.5-pro'
+  | 'gemini-2.5-flash'
+  | 'gemma-3-27b-it'
+  // Mistral
+  | 'mistral-large-latest'
+  | 'mistral-medium-latest'
+  | 'mistral-small-latest'
+  | 'codestral-latest'
+  // Zhipu
+  | 'glm-4.5-flash'
+  // Groq
+  | 'llama-3.3-70b-versatile'
+  | 'openai/gpt-oss-20b' // Specific Groq ID
+  // Cerebras
+  | 'gpt-oss-120b'
+  | 'qwen-3-235b-a22b-instruct-2507'
+  | 'zai-glm-4.6';
+
 export interface Conversation {
   id: string;
   title: string;
@@ -14,7 +35,7 @@ export interface Message {
   content: string;
   role: 'user' | 'assistant';
   timestamp: Date;
-  model?: 'google' | 'zhipu' | 'mistral-small' | 'mistral-codestral';
+  model?: AIModel;
   isEditing?: boolean;
 }
 
@@ -31,7 +52,9 @@ export interface APISettings {
   googleApiKey: string;
   zhipuApiKey: string;
   mistralApiKey: string;
-  selectedModel: 'google' | 'zhipu' | 'mistral-small' | 'mistral-codestral';
+  groqApiKey: string; // New
+  cerebrasApiKey: string; // New
+  selectedModel: AIModel;
   selectedTutorMode: TutorMode;
 }
 
